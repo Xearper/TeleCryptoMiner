@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Mining Tycoon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">Crypto Mining Tycoon</h1>
+            <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </header>
+        
+        <main class="flex flex-col items-center">
+            <div id="cryptoDisplay" class="text-4xl font-bold mb-4">0 BTC</div>
+            <div id="clickerContainer" class="mb-8">
+                <img src="clicker.svg" alt="Crypto Miner" class="w-48 h-48 cursor-pointer" id="cryptoClicker">
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+                    <h2 class="text-xl font-semibold mb-2">Upgrades</h2>
+                    <ul id="upgradesList" class="space-y-2"></ul>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+                    <h2 class="text-xl font-semibold mb-2">Stats</h2>
+                    <ul id="statsList" class="space-y-2"></ul>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
