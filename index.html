@@ -16,12 +16,22 @@
                         'card-bg': '#1E1E1E',
                         'btn-primary': '#3B82F6',
                         'btn-secondary': '#10B981',
+                        'btc-orange': '#F7931A',
+                        'btc-orange-dark': '#E17D18',
                     },
                     boxShadow: {
                         'neon': '0 0 5px theme("colors.blue.400"), 0 0 20px theme("colors.blue.600")',
+                        'btc-glow': '0 0 10px theme("colors.btc-orange"), 0 0 30px theme("colors.btc-orange")',
                     },
                     animation: {
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'btc-pulse': 'btcPulse 2s infinite',
+                    },
+                    keyframes: {
+                        btcPulse: {
+                            '0%, 100%': { boxShadow: '0 0 0 0 rgba(247, 147, 26, 0.4)' },
+                            '50%': { boxShadow: '0 0 0 15px rgba(247, 147, 26, 0)' },
+                        }
                     }
                 },
             },
@@ -69,11 +79,6 @@
     </style>
 </head>
 <body class="flex flex-col h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
-    <header class="bg-opacity-50 bg-gray-900 p-4 shadow-lg backdrop-filter backdrop-blur-md">
-        <h1 class="text-2xl font-bold text-white flex items-center">
-            <i class="fas fa-coins mr-2 text-yellow-500 animate-pulse-slow"></i>Crypto Mining Tycoon
-        </h1>
-    </header>
 
     <main class="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto space-y-6">
         <div class="w-full max-w-md space-y-6">
@@ -92,11 +97,11 @@
             </div>
 
             <div id="cryptoDisplay" class="text-4xl font-bold bg-card-bg bg-opacity-80 rounded-xl p-8 text-center shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm glow-on-hover">
-                <i class="fab fa-bitcoin mr-2 text-yellow-500"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
+                <i class="fab fa-bitcoin mr-2 text-btc-orange"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
             </div>
 
             <div id="mineSection" class="w-full">
-                <button id="cryptoClicker" class="w-full py-6 bg-gradient-to-r from-btn-primary to-blue-600 hover:from-blue-600 hover:to-btn-primary text-white rounded-xl text-2xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-neon focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <button id="cryptoClicker" class="w-full py-6 bg-gradient-to-r from-btc-orange to-btc-orange-dark hover:from-btc-orange-dark hover:to-btc-orange text-white rounded-xl text-2xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-btc-glow focus:outline-none focus:ring-2 focus:ring-btc-orange focus:ring-opacity-50 animate-btc-pulse">
                     <i class="fas fa-hammer mr-2"></i>Mine BTC
                 </button>
             </div>
