@@ -6,6 +6,7 @@
     <title>Crypto Mining Tycoon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.3.1/decimal.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -76,6 +77,42 @@
             font-weight: bold;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         }
+
+        #usernameDisplay {
+            background: linear-gradient(45deg, #3B82F6, #10B981);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        #usernameDisplay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
+            border-radius: 0.5rem;
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        #usernameDisplay:hover {
+            transform: translateY(-2px);
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        #usernameDisplay:hover::after {
+            filter: blur(8px);
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
@@ -128,45 +165,7 @@
 
     <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
     <div id="clickAnimationContainer" class="fixed inset-0 pointer-events-none z-50"></div>
-<style>
-    #usernameDisplay {
-    background: linear-gradient(45deg, #3B82F6, #10B981);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    font-weight: bold;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-    display: inline-block;
-}
-
-#usernameDisplay::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
-    border-radius: 0.5rem;
-    z-index: -1;
-    transition: all 0.3s ease;
-}
-
-#usernameDisplay:hover {
-    transform: translateY(-2px);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-#usernameDisplay:hover::after {
-    filter: blur(8px);
-    opacity: 0.7;
-}
-</style>
 
     <script src="script.js"></script>
-    
 </body>
 </html>
