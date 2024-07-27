@@ -2,86 +2,127 @@
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <title>Crypto Mining Tycoon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#121212',
+                        'card-bg': '#1E1E1E',
+                        'btn-primary': '#3B82F6',
+                        'btn-secondary': '#10B981',
+                    },
+                    boxShadow: {
+                        'neon': '0 0 5px theme("colors.blue.400"), 0 0 20px theme("colors.blue.600")',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-        body { font-family: 'Poppins', sans-serif; }
-        .crypto-bg {
-            background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"%3E%3C/path%3E%3C/g%3E%3C/svg%3E');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        .progress-bar {
+            @apply bg-gray-700 rounded-full h-2 overflow-hidden;
         }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        
+        .progress-bar-fill {
+            @apply bg-blue-500 h-full rounded-full transition-all duration-500 ease-out;
         }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        
+        .glow-on-hover:hover {
+            @apply shadow-neon;
         }
-        .pulse { animation: pulse 2s infinite; }
-        .slide-in {
-            animation: slideIn 0.5s ease-out;
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
         }
-        @keyframes slideIn {
-            0% { transform: translateY(20px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
+
+        .click-popup {
+            position: absolute;
+            animation: floatUp 2s ease-out;
+            pointer-events: none;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
         }
     </style>
 </head>
-<body class="flex flex-col h-screen bg-gradient-to-br from-blue-100 to-blue-300 crypto-bg">
-    <header class="bg-white bg-opacity-90 shadow-lg p-4">
-        <h1 class="text-2xl font-bold text-blue-600">
-            <i class="fas fa-coins mr-2"></i>Crypto Mining Tycoon
+<body class="flex flex-col h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
+    <header class="bg-opacity-50 bg-gray-900 p-4 shadow-lg backdrop-filter backdrop-blur-md">
+        <h1 class="text-2xl font-bold text-white flex items-center">
+            <i class="fas fa-coins mr-2 text-yellow-500 animate-pulse-slow"></i>Crypto Mining Tycoon
         </h1>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto">
-        <div class="w-full max-w-md">
-            <div class="glass-effect rounded-xl p-4 mb-4 slide-in">
+    <main class="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto space-y-6">
+        <div class="w-full max-w-md space-y-6">
+            <div class="bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold"><i class="fas fa-user mr-2 text-blue-400"></i><span id="usernameDisplay" class="glow-on-hover">Player</span></span>
+                    <span class="text-green-400"><i class="fas fa-clock mr-2"></i><span id="hourlyIncomeDisplay">0 BTC/hr</span></span>
+                </div>
                 <div class="flex justify-between items-center mb-2">
-                    <span id="usernameDisplay" class="font-semibold"><i class="fas fa-user mr-1"></i>Player</span>
-                    <span id="hourlyIncomeDisplay" class="text-green-600"><i class="fas fa-clock mr-1"></i>0 BTC/hr</span>
+                    <span><i class="fas fa-bolt mr-2 text-yellow-400"></i><span id="electricityDisplay"><span id="currentElectricity">50</span>/<span id="maxElectricity">50</span></span></span>
+                    <button id="refillElectricity" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-4 py-2 rounded-lg text-sm font-semibold transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50">Refill</button>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span id="electricityDisplay"><i class="fas fa-bolt mr-1"></i><span id="currentElectricity">50</span>/<span id="maxElectricity">50</span></span>
-                    <button id="refillElectricity" class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-sm transition-colors duration-300">Refill</button>
+                <div class="progress-bar">
+                    <div id="electricityProgress" class="progress-bar-fill" style="width: 100%;"></div>
                 </div>
             </div>
 
-            <div id="cryptoDisplay" class="text-4xl font-bold mb-8 glass-effect rounded-2xl p-6 text-center slide-in">
-                <i class="fab fa-bitcoin mr-2 text-yellow-500"></i><span id="cryptoAmount" class="text-blue-700">0 BTC</span>
+            <div id="cryptoDisplay" class="text-4xl font-bold bg-card-bg bg-opacity-80 rounded-xl p-8 text-center shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm glow-on-hover">
+                <i class="fab fa-bitcoin mr-2 text-yellow-500"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
             </div>
 
-            <div id="mineSection" class="section active">
-                <button id="cryptoClicker" class="w-full h-32 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-2xl shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 pulse slide-in">
-                    Mine BTC
+            <div id="mineSection" class="w-full">
+                <button id="cryptoClicker" class="w-full py-6 bg-gradient-to-r from-btn-primary to-blue-600 hover:from-blue-600 hover:to-btn-primary text-white rounded-xl text-2xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-neon focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    <i class="fas fa-hammer mr-2"></i>Mine BTC
                 </button>
             </div>
 
-            <div id="upgradeSection" class="section hidden mt-4">
-                <h2 class="text-xl font-semibold mb-3 text-blue-700">Upgrades</h2>
-                <ul id="upgradesList" class="space-y-3"></ul>
+            <div id="upgradeSection" class="hidden w-full space-y-4">
+                <h2 class="text-2xl font-semibold mb-4 text-white text-center">Upgrades</h2>
+                <div id="upgradesList" class="space-y-4">
+                    <!-- Upgrade items will be dynamically added here by JavaScript -->
+                </div>
             </div>
         </div>
     </main>
 
-    <nav class="bg-white bg-opacity-90 shadow-lg">
+    <nav class="bg-gray-900 bg-opacity-50 shadow-lg backdrop-filter backdrop-blur-md">
         <div class="flex justify-around">
-            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-100" data-section="mine">
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="mine">
                 <i class="fas fa-hammer mr-2"></i>Mine
             </button>
-            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-100" data-section="upgrade">
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="upgrade">
                 <i class="fas fa-arrow-up mr-2"></i>Upgrade
             </button>
         </div>
     </nav>
 
     <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
+    <div id="clickAnimationContainer" class="fixed inset-0 pointer-events-none z-50"></div>
 
     <script src="script.js"></script>
 </body>
