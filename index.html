@@ -1,48 +1,312 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Mining Tycoon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .crypto-bg {
+            background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Cg fill="%239C92AC" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"%3E%3C/path%3E%3C/g%3E%3C/svg%3E');
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        @keyframes smooth-pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(14, 165, 233, 0);
+            }
+        }
+
+        .pulse {
+            animation: smooth-pulse 2s infinite;
+        }
+
+        @keyframes click-animation {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 15px rgba(14, 165, 233, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+            }
+        }
+
+        .click-animate {
+            animation: click-animation 0.3s ease-out;
+        }
+
+        .spin {
+            animation: spin 20s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        .float-text {
+            position: absolute;
+            animation: float-up 1s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        .notification {
+            animation: slide-in 0.5s ease-out;
+        }
+
+        @keyframes slide-in {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(0); }
+        }
+    </style>
     <script>
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                },
+            },
         }
     </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
-    <div class="container mx-auto px-4 py-8">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold">Crypto Mining Tycoon</h1>
-            <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-            </button>
-        </header>
+<body class="bg-gradient-to-br from-primary-100 to-primary-300 dark:from-gray-900 dark:to-primary-900 text-gray-800 dark:text-gray-200 flex flex-col h-full transition-colors duration-500 crypto-bg">
+    <header class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 shadow-lg backdrop-filter backdrop-blur-lg">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-primary-600 dark:text-primary-400 tracking-wide">
+                    <i class="fas fa-coins mr-2"></i>Crypto Mining Tycoon
+                </h1>
+                <div class="flex items-center space-x-2">
+                    <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <i class="fas fa-moon dark:fas fa-sun text-primary-600 dark:text-primary-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-hidden p-4 flex flex-col space-y-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="glass-effect rounded-xl p-3 text-center">
+                <div class="text-sm text-primary-600 dark:text-primary-400 font-semibold mb-1">Player</div>
+                <div id="usernameDisplay" class="font-bold text-lg text-primary-800 dark:text-primary-200">
+                    <i class="fas fa-user mr-1"></i><span>Miner</span>
+                </div>
+            </div>
+            <div class="glass-effect rounded-xl p-3 text-center">
+                <div class="text-sm text-green-600 dark:text-green-400 font-semibold mb-1">Income</div>
+                <div id="hourlyIncomeDisplay" class="font-bold text-lg text-green-800 dark:text-green-200">
+                    <i class="fas fa-clock mr-1"></i><span>0 BTC/hr</span>
+                </div>
+            </div>
+            <div class="glass-effect rounded-xl p-3 text-center">
+                <div class="text-sm text-yellow-600 dark:text-yellow-400 font-semibold mb-1">Electricity</div>
+                <div id="electricityDisplay" class="font-bold text-lg text-yellow-800 dark:text-yellow-200">
+                    <i class="fas fa-bolt mr-1"></i><span id="currentElectricity">100</span>/<span id="maxElectricity">100</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="cryptoDisplay" class="text-4xl font-bold text-center text-yellow-500 dark:text-yellow-300 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 relative overflow-hidden glass-effect">
+            <div class="absolute inset-0 opacity-10">
+                <i class="fab fa-bitcoin text-9xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 spin"></i>
+            </div>
+            <div class="relative z-10">
+                <i class="fab fa-bitcoin mr-2"></i><span id="cryptoAmount">0.00000000 BTC</span>
+            </div>
+        </div>
         
-        <main class="flex flex-col items-center">
-            <div id="cryptoDisplay" class="text-4xl font-bold mb-4">0 BTC</div>
-            <div id="clickerContainer" class="mb-8">
-                <img src="clicker.svg" alt="Crypto Miner" class="w-48 h-48 cursor-pointer" id="cryptoClicker">
+        <section id="mineSection" class="section active flex-grow flex flex-col space-y-4">
+            <div id="clickerContainer" class="flex-grow flex items-center justify-center">
+                <button id="cryptoClicker" class="w-48 h-48 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white rounded-full shadow-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-800 relative overflow-hidden pulse">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fas fa-hammer text-6xl"></i>
+                    </div>
+                    <span class="absolute bottom-8 left-0 right-0 text-center text-xl font-bold">Mine BTC</span>
+                </button>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-                    <h2 class="text-xl font-semibold mb-2">Upgrades</h2>
-                    <ul id="upgradesList" class="space-y-2"></ul>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
-                    <h2 class="text-xl font-semibold mb-2">Stats</h2>
-                    <ul id="statsList" class="space-y-2"></ul>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 glass-effect">
+                <h2 class="text-lg font-semibold mb-2 text-primary-600 dark:text-primary-400">
+                    <i class="fas fa-clock mr-2"></i>Mining Progress
+                </h2>
+                <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+                    <div id="miningProgress" class="bg-primary-600 h-4 rounded-full progress-bar" style="width: 0%"></div>
                 </div>
             </div>
-        </main>
-    </div>
-    
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-4 glass-effect">
+                <h2 class="text-lg font-semibold mb-2 text-yellow-600 dark:text-yellow-400">
+                    <i class="fas fa-bolt mr-2"></i>Electricity
+                </h2>
+                <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 mb-3">
+                    <div id="electricityProgress" class="bg-yellow-400 h-4 rounded-full progress-bar" style="width: 100%"></div>
+                </div>
+                <button id="refillElectricity" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50">
+                    Refill Electricity
+                </button>
+            </div>
+        </section>
+
+        <section id="upgradeSection" class="section hidden flex-grow overflow-y-auto space-y-4">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow glass-effect">
+                <h2 class="text-xl font-semibold mb-3 text-primary-600 dark:text-primary-400">
+                    <i class="fas fa-arrow-up mr-2"></i>Upgrades
+                </h2>
+                <ul id="upgradesList" class="space-y-3"></ul>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow glass-effect">
+                <h2 class="text-xl font-semibold mb-3 text-primary-600 dark:text-primary-400">
+                    <i class="fas fa-chart-bar mr-2"></i>Stats
+                </h2>
+                <ul id="statsList" class="space-y-2"></ul>
+            </div>
+        </section>
+    </main>
+
+    <nav class="bg-white bg-opacity-90 dark:bg-gray-800 dark:bg-opacity-90 shadow-lg backdrop-filter backdrop-blur-lg">
+        <div class="flex justify-around">
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-section="mine">
+                <i class="fas fa-hammer text-xl"></i>
+                <span class="ml-2 text-sm font-medium">Mine</span>
+            </button>
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-section="upgrade">
+                <i class="fas fa-arrow-up text-xl"></i>
+                <span class="ml-2 text-sm font-medium">Upgrade</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50"></div>
+
     <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cryptoClicker = document.getElementById('cryptoClicker');
+            const upgradesList = document.getElementById('upgradesList');
+            const cryptoAmountElement = document.getElementById('cryptoAmount');
+            
+            // ... (previous code remains the same)
+
+            // Function to buy upgrade
+            function buyUpgrade(upgrade) {
+                const currentBTC = parseFloat(cryptoAmountElement.textContent);
+                if (currentBTC >= upgrade.cost) {
+                    // Deduct the cost
+                    cryptoAmountElement.textContent = (currentBTC - upgrade.cost).toFixed(8) + ' BTC';
+                    
+                    // Apply the upgrade effect (this is a placeholder, implement actual logic)
+                    console.log(`Bought upgrade: ${upgrade.name}`);
+                    
+                    // Show celebration animation
+                    showCelebrationAnimation(upgrade.name);
+                    
+                    // Update the upgrade button or remove it if it's a one-time upgrade
+                    updateUpgradeButton(upgrade);
+                } else {
+                    alert("Not enough BTC to buy this upgrade!");
+                }
+            }
+
+            // Function to update or remove upgrade button after purchase
+            function updateUpgradeButton(upgrade) {
+                const button = upgradesList.querySelector(`button:contains("${upgrade.name}")`);
+                if (button) {
+                    if (upgrade.maxLevel && upgrade.currentLevel >= upgrade.maxLevel) {
+                        button.remove();
+                    } else {
+                        upgrade.currentLevel = (upgrade.currentLevel || 0) + 1;
+                        upgrade.cost *= 1.5; // Increase cost for next level
+                        button.textContent = `Buy ${upgrade.name} Lvl ${upgrade.currentLevel + 1} - ${upgrade.cost.toFixed(8)} BTC`;
+                    }
+                }
+            }
+
+            // Function to show celebration animation using Telegram WebApp
+            function showCelebrationAnimation(upgradeName) {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    // Show confetti animation
+                    window.Telegram.WebApp.showPopup({
+                        title: 'Upgrade Purchased!',
+                        message: `You've successfully bought the ${upgradeName} upgrade!`,
+                        buttons: [{type: 'close'}]
+                    });
+                    
+                    // Trigger haptic feedback
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                    
+                    // You can also use other Telegram WebApp features here, such as:
+                    // window.Telegram.WebApp.sendData(JSON.stringify({event: 'upgrade_purchased', upgrade: upgradeName}));
+                } else {
+                    console.log('Telegram WebApp is not available. Celebration shown in console.');
+                    console.log(`🎉 Congratulations! You've purchased the ${upgradeName} upgrade! 🎉`);
+                }
+            }
+
+            // Sample upgrades data
+            const upgrades = [
+                { name: 'Better GPUs', cost: 10, maxLevel: 5 },
+                { name: 'Cooling System', cost: 50, maxLevel: 3 },
+                { name: 'Solar Panels', cost: 100, maxLevel: 1 },
+                { name: 'AI Optimization', cost: 200, maxLevel: 2 }
+            ];
+
+            // Populate upgrades list
+            upgrades.forEach(upgrade => {
+                upgradesList.appendChild(createUpgradeButton(upgrade));
+            });
+
+            // Simulating mining and updating BTC amount (replace with actual game logic)
+            setInterval(() => {
+                const currentBTC = parseFloat(cryptoAmountElement.textContent);
+                cryptoAmountElement.textContent = (currentBTC + 0.00000001).toFixed(8) + ' BTC';
+            }, 100);
+        });
+    </script>
 </body>
 </html>
