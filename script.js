@@ -1,19 +1,19 @@
 // Game state
 let gameState = {
-    crypto: 0,
-    clickPower: 1,
+    crypto: new Decimal(0),
+    clickPower: new Decimal(1),
     upgrades: {
-        gpu: { level: 0, cost: 50, power: 1, scaling: 1.5 },
-        asic: { level: 0, cost: 500, power: 10, scaling: 1.8 },
-        quantum: { level: 0, cost: 5000, power: 100, scaling: 2.2 },
-        solarPanel: { level: 0, cost: 1000, power: 5, scaling: 2 }
+        gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5) },
+        asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8) },
+        quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2) },
+        solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2) }
     },
     lastUpdate: Date.now(),
     username: "Player",
     electricity: {
-        current: 50,
-        max: 50,
-        regenRate: 1, // 1 electricity per second
+        current: new Decimal(50),
+        max: new Decimal(50),
+        regenRate: new Decimal(1),
         lastRegen: Date.now()
     }
 };
@@ -23,23 +23,24 @@ const isTelegram = window.Telegram && window.Telegram.WebApp;
 
 // Calculate hourly income
 function calculateHourlyIncome() {
-    return Math.floor((
-        gameState.upgrades.gpu.level * gameState.upgrades.gpu.power +
-        gameState.upgrades.asic.level * gameState.upgrades.asic.power +
-        gameState.upgrades.quantum.level * gameState.upgrades.quantum.power
-    ) * 3600 / 20); // Multiply by 3600 for hourly rate, divide by 20 as per passive income calculation
+    return gameState.upgrades.gpu.level * gameState.upgrades.gpu.power
+        .plus(gameState.upgrades.asic.level * gameState.upgrades.asic.power)
+        .plus(gameState.upgrades.quantum.level * gameState.upgrades.quantum.power)
+        .times(3600).dividedBy(20).floor();
 }
 
 // Update game display
 function updateDisplay() {
-    document.getElementById('cryptoAmount').textContent = `${Math.floor(gameState.crypto)} BTC`;
+    const cryptoAmount = gameState.crypto.isNaN() || !gameState.crypto.isFinite() 
+        ? "Error" 
+        : gameState.crypto.floor().toString();
+    document.getElementById('cryptoAmount').textContent = `${cryptoAmount} BTC`;
     document.getElementById('usernameDisplay').textContent = gameState.username;
     document.getElementById('hourlyIncomeDisplay').textContent = `${calculateHourlyIncome()} BTC/hr`;
-    document.getElementById('currentElectricity').textContent = Math.floor(gameState.electricity.current);
-    document.getElementById('maxElectricity').textContent = gameState.electricity.max;
+    document.getElementById('currentElectricity').textContent = gameState.electricity.current.floor().toString();
+    document.getElementById('maxElectricity').textContent = gameState.electricity.max.toString();
     
-    // Update electricity progress bar
-    const electricityPercentage = (gameState.electricity.current / gameState.electricity.max) * 100;
+    const electricityPercentage = gameState.electricity.current.dividedBy(gameState.electricity.max).times(100).toNumber();
     document.getElementById('electricityProgress').style.width = `${electricityPercentage}%`;
     
     updateUpgradesList();
@@ -58,14 +59,13 @@ function updateUpgradesList() {
                 <span class="text-yellow-400">Level ${upgrade.level}</span>
             </div>
             <div class="flex justify-between items-center">
-                <span class="text-green-400">${Math.floor(upgrade.cost)} BTC</span>
+                <span class="text-green-400">${upgrade.cost.floor()} BTC</span>
                 <button class="upgrade-btn bg-btn-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" data-upgrade="${key}">Upgrade</button>
             </div>
         `;
         upgradesList.appendChild(li);
     });
     
-    // Add event listeners to upgrade buttons
     document.querySelectorAll('.upgrade-btn').forEach(button => {
         button.addEventListener('click', function() {
             buyUpgrade(this.getAttribute('data-upgrade'));
@@ -75,9 +75,9 @@ function updateUpgradesList() {
 
 // Handle crypto clicking
 function clickCrypto() {
-    if (gameState.electricity.current >= 1) {
-        gameState.crypto += gameState.clickPower;
-        gameState.electricity.current -= 1;
+    if (gameState.electricity.current.gte(1)) {
+        gameState.crypto = gameState.crypto.plus(gameState.clickPower);
+        gameState.electricity.current = gameState.electricity.current.minus(1);
         updateDisplay();
         animateClick(gameState.clickPower);
     } else {
@@ -92,7 +92,6 @@ function animateClick(amount) {
     popup.className = 'click-popup text-2xl text-yellow-400';
     popup.textContent = `+${amount} BTC`;
     
-    // Random position within the click area
     const x = Math.random() * (container.offsetWidth - 100);
     const y = Math.random() * (container.offsetHeight - 100);
     
@@ -101,7 +100,6 @@ function animateClick(amount) {
     
     container.appendChild(popup);
     
-    // Remove the element after the animation completes
     setTimeout(() => {
         container.removeChild(popup);
     }, 2000);
@@ -110,9 +108,12 @@ function animateClick(amount) {
 // Regenerate electricity
 function regenerateElectricity() {
     const now = Date.now();
-    const timeDiff = (now - gameState.electricity.lastRegen) / 1000; // in seconds
-    const regenAmount = timeDiff * gameState.electricity.regenRate;
-    gameState.electricity.current = Math.min(gameState.electricity.current + regenAmount, gameState.electricity.max);
+    const timeDiff = new Decimal(now - gameState.electricity.lastRegen).dividedBy(1000);
+    const regenAmount = timeDiff.times(gameState.electricity.regenRate);
+    gameState.electricity.current = Decimal.min(
+        gameState.electricity.current.plus(regenAmount),
+        gameState.electricity.max
+    );
     gameState.electricity.lastRegen = now;
     updateDisplay();
 }
@@ -127,15 +128,15 @@ function refillElectricity() {
 // Buy upgrade
 function buyUpgrade(upgradeKey) {
     const upgrade = gameState.upgrades[upgradeKey];
-    if (gameState.crypto >= upgrade.cost) {
-        gameState.crypto -= upgrade.cost;
+    if (gameState.crypto.gte(upgrade.cost)) {
+        gameState.crypto = gameState.crypto.minus(upgrade.cost);
         upgrade.level++;
-        upgrade.cost *= upgrade.scaling;
+        upgrade.cost = upgrade.cost.times(upgrade.scaling);
         if (upgradeKey === 'solarPanel') {
-            gameState.electricity.max += 50;
-            gameState.electricity.regenRate += 0.5;
+            gameState.electricity.max = gameState.electricity.max.plus(50);
+            gameState.electricity.regenRate = gameState.electricity.regenRate.plus(0.5);
         } else {
-            gameState.clickPower += upgrade.power;
+            gameState.clickPower = gameState.clickPower.plus(upgrade.power);
         }
         updateDisplay();
         saveGame();
@@ -148,13 +149,13 @@ function buyUpgrade(upgradeKey) {
 // Passive income
 function passiveIncome() {
     const now = Date.now();
-    const timeDiff = (now - gameState.lastUpdate) / 1000; // in seconds
-    const passiveGain = timeDiff * (
-        gameState.upgrades.gpu.level * gameState.upgrades.gpu.power +
-        gameState.upgrades.asic.level * gameState.upgrades.asic.power +
-        gameState.upgrades.quantum.level * gameState.upgrades.quantum.power
-    ) / 20; // Divide by 20 to make passive income slower
-    gameState.crypto += passiveGain;
+    const timeDiff = new Decimal(now - gameState.lastUpdate).dividedBy(1000);
+    const passiveGain = timeDiff.times(
+        gameState.upgrades.gpu.level * gameState.upgrades.gpu.power
+        .plus(gameState.upgrades.asic.level * gameState.upgrades.asic.power)
+        .plus(gameState.upgrades.quantum.level * gameState.upgrades.quantum.power)
+    ).dividedBy(20);
+    gameState.crypto = gameState.crypto.plus(passiveGain);
     gameState.lastUpdate = now;
     updateDisplay();
     saveGame();
@@ -190,7 +191,10 @@ function setupNavigation() {
 
 // Save game state
 function saveGame() {
-    const gameStateString = JSON.stringify(gameState);
+    validateGameState();
+    const gameStateString = JSON.stringify(gameState, (key, value) =>
+        value instanceof Decimal ? value.toString() : value
+    );
     localStorage.setItem('cryptoTycoonSave', gameStateString);
 
     if (isTelegram && window.Telegram.WebApp.CloudStorage) {
@@ -223,8 +227,7 @@ function loadGame() {
                         loadFromLocalStorage();
                     } else if (value) {
                         try {
-                            gameState = JSON.parse(value);
-                            updateDisplay();
+                            parseAndSetGameState(value);
                             console.log('Game loaded successfully from CloudStorage');
                         } catch (parseError) {
                             console.log('Error parsing game state from CloudStorage:', parseError);
@@ -252,8 +255,7 @@ function loadFromLocalStorage() {
     const savedGame = localStorage.getItem('cryptoTycoonSave');
     if (savedGame) {
         try {
-            gameState = JSON.parse(savedGame);
-            updateDisplay();
+            parseAndSetGameState(savedGame);
             console.log('Game loaded from localStorage');
         } catch (error) {
             console.error('Error parsing game state from localStorage:', error);
@@ -265,28 +267,72 @@ function loadFromLocalStorage() {
     }
 }
 
+// Parse and set game state
+function parseAndSetGameState(stateString) {
+    const parsedState = JSON.parse(stateString, (key, value) => {
+        if (typeof value === 'string' && /^-?\d*\.?\d+(e[+-]?\d+)?$/.test(value)) {
+            return new Decimal(value);
+        }
+        return value;
+    });
+    Object.assign(gameState, parsedState);
+    validateGameState();
+    updateDisplay();
+}
+
 // Reset game state to initial values
 function resetGameState() {
     gameState = {
-        crypto: 0,
-        clickPower: 1,
+        crypto: new Decimal(0),
+        clickPower: new Decimal(1),
         upgrades: {
-            gpu: { level: 0, cost: 50, power: 1, scaling: 1.5 },
-            asic: { level: 0, cost: 500, power: 10, scaling: 1.8 },
-            quantum: { level: 0, cost: 5000, power: 100, scaling: 2.2 },
-            solarPanel: { level: 0, cost: 1000, power: 5, scaling: 2 }
+            gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5) },
+            asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8) },
+            quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2) },
+            solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2) }
         },
         lastUpdate: Date.now(),
         username: gameState.username || "Player",
         electricity: {
-            current: 50,
-            max: 50,
-            regenRate: 1,
+            current: new Decimal(50),
+            max: new Decimal(50),
+            regenRate: new Decimal(1),
             lastRegen: Date.now()
         }
     };
     updateDisplay();
     showNotification('Starting new game', 'info');
+}
+
+// Validate game state
+function validateGameState() {
+    const validationErrors = [];
+    if (gameState.crypto.isNaN() || !gameState.crypto.isFinite()) {
+        validationErrors.push("Invalid crypto value");
+        gameState.crypto = new Decimal(0);
+    }
+    if (gameState.clickPower.isNaN() || !gameState.clickPower.isFinite() || gameState.clickPower.lt(1)) {
+        validationErrors.push("Invalid click power");
+        gameState.clickPower = new Decimal(1);
+    }
+    Object.values(gameState.upgrades).forEach(upgrade => {
+        if (upgrade.cost.isNaN() || !upgrade.cost.isFinite() || upgrade.cost.lt(0)) {
+            validationErrors.push(`Invalid cost for ${upgrade.name}`);
+            upgrade.cost = new Decimal(50);
+        }
+    });
+    if (gameState.electricity.current.isNaN() || !gameState.electricity.current.isFinite() || gameState.electricity.current.lt(0)) {
+        validationErrors.push("Invalid current electricity");
+        gameState.electricity.current = new Decimal(0);
+    }
+    if (gameState.electricity.max.isNaN() || !gameState.electricity.max.isFinite() || gameState.electricity.max.lt(50)) {
+        validationErrors.push("Invalid max electricity");
+        gameState.electricity.max = new Decimal(50);
+    }
+    if (validationErrors.length > 0) {
+        console.error("Game state validation errors:", validationErrors);
+        showNotification("Game state error detected and fixed", "error");
+    }
 }
 
 // Initialize game
