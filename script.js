@@ -485,6 +485,41 @@ function clickCrypto() {
     }
 }
 
+function createLeaderboardItem(rank, username, btcAmount) {
+    const item = document.createElement('div');
+    item.className = 'flex justify-between items-center p-2 rounded-lg bg-gray-800 bg-opacity-50 hover:bg-opacity-70 transition-colors duration-200';
+    item.innerHTML = `
+        <div class="flex items-center">
+            <span class="text-lg font-semibold mr-3 ${rank <= 3 ? 'text-yellow-400' : 'text-gray-400'}">#${rank}</span>
+            <span class="text-white">${username}</span>
+        </div>
+        <span class="text-btc-orange font-semibold">${btcAmount} BTC</span>
+    `;
+    return item;
+}
+
+// Usage in updateLeaderboardDisplay function
+function updateLeaderboardDisplay() {
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = '';
+
+    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
+        const item = createLeaderboardItem(index + 1, entry.username, new Decimal(entry.crypto).toFixed(2));
+        leaderboardList.appendChild(item);
+    });
+
+    // Display user's rank
+    const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
+    const userRankElement = document.getElementById('userRank');
+    userRankElement.innerHTML = `
+        <span class="text-lg font-semibold">Your Rank: 
+            <span class="text-btc-orange">#${userRank}</span>
+        </span>
+        <br>
+        <span class="text-sm">${gameState.crypto.toFixed(2)} BTC</span>
+    `;
+}
+
 
 // Initialize game
 function init() {
