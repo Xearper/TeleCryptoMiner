@@ -116,7 +116,6 @@
     </style>
 </head>
 <body class="flex flex-col h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
-
     <main class="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto space-y-6">
         <div class="w-full max-w-md space-y-6">
             <div class="bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
@@ -159,29 +158,33 @@
 
             <div id="leaderboardSection" class="hidden w-full space-y-4">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Leaderboard</h2>
-                <div id="leaderboardList" class="space-y-4 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                <div id="leaderboardList" class="space-y-2 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
                     <!-- Leaderboard items will be dynamically added here by JavaScript -->
                 </div>
-                <div id="userRank" class="text-center mt-4 text-white">
+                <div id="userRank" class="text-center mt-4 text-white bg-card-bg bg-opacity-80 rounded-xl p-3 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
                     <!-- User's rank will be displayed here -->
                 </div>
             </div>
         </div>
     </main>
 
-    <nav class="bg-gray-900 bg-opacity-50 shadow-lg backdrop-filter backdrop-blur-md">
-        <div class="flex justify-around">
+    <nav class="bg-gray-900 bg-opacity-80 shadow-lg backdrop-filter backdrop-blur-md fixed bottom-0 left-0 right-0">
+        <div class="flex justify-around max-w-md mx-auto">
             <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="mine">
-                <i class="fas fa-hammer mr-2"></i>Mine
+                <i class="fas fa-hammer text-xl mb-1"></i>
+                <span class="block text-xs">Mine</span>
             </button>
             <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="upgrade">
-                <i class="fas fa-arrow-up mr-2"></i>Upgrade
+                <i class="fas fa-arrow-up text-xl mb-1"></i>
+                <span class="block text-xs">Upgrade</span>
             </button>
             <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="stats">
-                <i class="fas fa-chart-bar mr-2"></i>Stats
+                <i class="fas fa-chart-bar text-xl mb-1"></i>
+                <span class="block text-xs">Stats</span>
             </button>
             <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="leaderboard">
-                <i class="fas fa-trophy mr-2"></i>Leaderboard
+                <i class="fas fa-trophy text-xl mb-1"></i>
+                <span class="block text-xs">Leaderboard</span>
             </button>
         </div>
     </nav>
