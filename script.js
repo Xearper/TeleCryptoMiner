@@ -169,6 +169,7 @@ function refillElectricity() {
 
 // Buy upgrade
 function buyUpgrade(upgradeKey) {
+    console.log(`Attempting to buy upgrade: ${upgradeKey}`);
     const upgrade = gameState.upgrades[upgradeKey];
     if (gameState.crypto.gte(upgrade.cost)) {
         gameState.crypto = gameState.crypto.minus(upgrade.cost);
@@ -183,8 +184,10 @@ function buyUpgrade(upgradeKey) {
         gameState.stats.upgradesPurchased++;
         updateDisplay();
         saveGame();
+        console.log(`Successfully upgraded ${upgradeKey}. Showing success notification.`);
         showNotification(`Upgraded ${upgradeKey.toUpperCase()} to level ${upgrade.level}!`, 'success');
     } else {
+        console.log(`Not enough BTC to upgrade ${upgradeKey}. Showing error notification.`);
         showNotification(`Not enough BTC to upgrade ${upgradeKey.toUpperCase()}!`, 'error');
     }
 }
@@ -206,16 +209,24 @@ function passiveIncome() {
     saveGame();
 }
 
-// Show notification
 function showNotification(message, type) {
+    console.log(`Attempting to show notification: ${message} (${type})`);
     const notificationContainer = document.getElementById('notificationContainer');
+    if (!notificationContainer) {
+        console.error('Notification container not found in the DOM');
+        return;
+    }
     const notification = document.createElement('div');
     notification.className = `p-4 rounded-lg shadow-lg mb-2 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white`;
     notification.textContent = message;
     notificationContainer.appendChild(notification);
+    console.log('Notification added to container');
     setTimeout(() => {
         notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
-        setTimeout(() => notificationContainer.removeChild(notification), 500);
+        setTimeout(() => {
+            notificationContainer.removeChild(notification);
+            console.log('Notification removed from container');
+        }, 500);
     }, 2500);
 }
 
@@ -448,6 +459,32 @@ function updateLeaderboardDisplay() {
     const userRankElement = document.getElementById('userRank');
     userRankElement.textContent = `Your Rank: #${userRank} (${gameState.crypto.toFixed(2)} BTC)`;
 }
+
+
+function clickCrypto() {
+    if (gameState.electricity.current.gte(1)) {
+        const mined = gameState.clickPower;
+        gameState.crypto = gameState.crypto.plus(mined);
+        gameState.electricity.current = gameState.electricity.current.minus(1);
+        gameState.stats.totalClicks++;
+        gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
+        updateDisplay();
+        animateClick(mined);
+
+        // Trigger vibration in Telegram environment
+        if (isTelegram && window.Telegram.WebApp.hapticFeedback) {
+            try {
+                window.Telegram.WebApp.hapticFeedback.impactOccurred('light');
+                console.log('Vibration triggered');
+            } catch (error) {
+                console.error('Error triggering vibration:', error);
+            }
+        }
+    } else {
+        showNotification("Not enough electricity!", "error");
+    }
+}
+
 
 // Initialize game
 function init() {
