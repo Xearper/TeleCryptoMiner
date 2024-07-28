@@ -149,6 +149,23 @@
                     <!-- Upgrade items will be dynamically added here by JavaScript -->
                 </div>
             </div>
+
+            <div id="statsSection" class="hidden w-full space-y-4">
+                <h2 class="text-2xl font-semibold mb-4 text-white text-center">Stats</h2>
+                <div id="statsList" class="space-y-4 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                    <!-- Stats will be dynamically added here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="leaderboardSection" class="hidden w-full space-y-4">
+                <h2 class="text-2xl font-semibold mb-4 text-white text-center">Leaderboard</h2>
+                <div id="leaderboardList" class="space-y-4 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                    <!-- Leaderboard items will be dynamically added here by JavaScript -->
+                </div>
+                <div id="userRank" class="text-center mt-4 text-white">
+                    <!-- User's rank will be displayed here -->
+                </div>
+            </div>
         </div>
     </main>
 
@@ -159,6 +176,12 @@
             </button>
             <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="upgrade">
                 <i class="fas fa-arrow-up mr-2"></i>Upgrade
+            </button>
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="stats">
+                <i class="fas fa-chart-bar mr-2"></i>Stats
+            </button>
+            <button class="nav-btn flex-1 py-4 px-2 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="leaderboard">
+                <i class="fas fa-trophy mr-2"></i>Leaderboard
             </button>
         </div>
     </nav>
