@@ -15,8 +15,17 @@ let gameState = {
         max: new Decimal(50),
         regenRate: new Decimal(1),
         lastRegen: Date.now()
+    },
+    stats: {
+        totalClicks: 0,
+        totalMined: new Decimal(0),
+        upgradesPurchased: 0,
+        playTime: 0
     }
 };
+
+// Global leaderboard variable
+let globalLeaderboard = [];
 
 // Check if running in Telegram environment
 const isTelegram = window.Telegram && window.Telegram.WebApp;
@@ -44,6 +53,7 @@ function updateDisplay() {
     document.getElementById('electricityProgress').style.width = `${electricityPercentage}%`;
     
     updateUpgradesList();
+    updateStatsList();
 }
 
 // Update upgrades list
@@ -73,13 +83,45 @@ function updateUpgradesList() {
     });
 }
 
+// Update stats list
+function updateStatsList() {
+    const statsList = document.getElementById('statsList');
+    statsList.innerHTML = `
+        <div class="flex justify-between items-center">
+            <span>Total Clicks:</span>
+            <span>${gameState.stats.totalClicks}</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span>Total BTC Mined:</span><span>${gameState.stats.totalMined.floor()} BTC</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span>Upgrades Purchased:</span>
+            <span>${gameState.stats.upgradesPurchased}</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span>Play Time:</span>
+            <span>${formatPlayTime(gameState.stats.playTime)}</span>
+        </div>
+    `;
+}
+
+// Format play time
+function formatPlayTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+}
+
 // Handle crypto clicking
 function clickCrypto() {
     if (gameState.electricity.current.gte(1)) {
-        gameState.crypto = gameState.crypto.plus(gameState.clickPower);
+        const mined = gameState.clickPower;
+        gameState.crypto = gameState.crypto.plus(mined);
         gameState.electricity.current = gameState.electricity.current.minus(1);
+        gameState.stats.totalClicks++;
+        gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
         updateDisplay();
-        animateClick(gameState.clickPower);
+        animateClick(mined);
     } else {
         showNotification("Not enough electricity!", "error");
     }
@@ -138,6 +180,7 @@ function buyUpgrade(upgradeKey) {
         } else {
             gameState.clickPower = gameState.clickPower.plus(upgrade.power);
         }
+        gameState.stats.upgradesPurchased++;
         updateDisplay();
         saveGame();
         showNotification(`Upgraded ${upgradeKey.toUpperCase()} to level ${upgrade.level}!`, 'success');
@@ -156,6 +199,8 @@ function passiveIncome() {
         .plus(gameState.upgrades.quantum.level * gameState.upgrades.quantum.power)
     ).dividedBy(20);
     gameState.crypto = gameState.crypto.plus(passiveGain);
+    gameState.stats.totalMined = gameState.stats.totalMined.plus(passiveGain);
+    gameState.stats.playTime += timeDiff.toNumber();
     gameState.lastUpdate = now;
     updateDisplay();
     saveGame();
@@ -177,7 +222,7 @@ function showNotification(message, type) {
 // Navigation
 function setupNavigation() {
     const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('#mineSection, #upgradeSection');
+    const sections = document.querySelectorAll('#mineSection, #upgradeSection, #statsSection, #leaderboardSection');
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetSection = btn.dataset.section;
@@ -185,6 +230,10 @@ function setupNavigation() {
             document.getElementById(`${targetSection}Section`).classList.remove('hidden');
             navButtons.forEach(navBtn => navBtn.classList.remove('text-blue-500'));
             btn.classList.add('text-blue-500');
+            
+            if (targetSection === 'leaderboard') {
+                updateLeaderboardDisplay();
+            }
         });
     });
 }
@@ -199,48 +248,41 @@ function saveGame() {
 
     if (isTelegram && window.Telegram.WebApp.CloudStorage) {
         try {
-            if (typeof window.Telegram.WebApp.CloudStorage.setItem === 'function') {
-                window.Telegram.WebApp.CloudStorage.setItem('cryptoTycoonSave', gameStateString, (error, success) => {
-                    if (error) {
-                        console.log('Error saving game state to CloudStorage:', error);
-                    } else {
-                        console.log('Game saved successfully to CloudStorage');
-                    }
-                });
-            } else {
-                console.log('CloudStorage setItem is not a function, using only localStorage');
-            }
+            window.Telegram.WebApp.CloudStorage.setItem('cryptoTycoonSave', gameStateString, (error, success) => {
+                if (error) {
+                    console.log('Error saving game state to CloudStorage:', error);
+                } else {
+                    console.log('Game saved successfully to CloudStorage');
+                }
+            });
         } catch (error) {
             console.log('Error saving to CloudStorage, using only localStorage:', error);
         }
     }
+    
+    updateLeaderboard();
 }
 
 // Load game state
 function loadGame() {
     if (isTelegram && window.Telegram.WebApp.CloudStorage) {
         try {
-            if (typeof window.Telegram.WebApp.CloudStorage.getItem === 'function') {
-                window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonSave', (error, value) => {
-                    if (error) {
-                        console.log('Error loading game state from CloudStorage:', error);
-                        loadFromLocalStorage();
-                    } else if (value) {
-                        try {
-                            parseAndSetGameState(value);
-                            console.log('Game loaded successfully from CloudStorage');
-                        } catch (parseError) {
-                            console.log('Error parsing game state from CloudStorage:', parseError);
-                            loadFromLocalStorage();
-                        }
-                    } else {
+            window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonSave', (error, value) => {
+                if (error) {
+                    console.log('Error loading game state from CloudStorage:', error);
+                    loadFromLocalStorage();
+                } else if (value) {
+                    try {
+                        parseAndSetGameState(value);
+                        console.log('Game loaded successfully from CloudStorage');
+                    } catch (parseError) {
+                        console.log('Error parsing game state from CloudStorage:', parseError);
                         loadFromLocalStorage();
                     }
-                });
-            } else {
-                console.log('CloudStorage getItem is not a function, using only localStorage');
-                loadFromLocalStorage();
-            }
+                } else {
+                    loadFromLocalStorage();
+                }
+            });
         } catch (error) {
             console.log('Error accessing CloudStorage, using only localStorage:', error);
             loadFromLocalStorage();
@@ -298,13 +340,19 @@ function resetGameState() {
             max: new Decimal(50),
             regenRate: new Decimal(1),
             lastRegen: Date.now()
+        },
+        stats: {
+            totalClicks: 0,
+            totalMined: new Decimal(0),
+            upgradesPurchased: 0,
+            playTime: 0
         }
     };
     updateDisplay();
     showNotification('Starting new game', 'info');
 }
 
-// Validate game state
+// Validate game state (continued)
 function validateGameState() {
     const validationErrors = [];
     if (gameState.crypto.isNaN() || !gameState.crypto.isFinite()) {
@@ -333,6 +381,72 @@ function validateGameState() {
         console.error("Game state validation errors:", validationErrors);
         showNotification("Game state error detected and fixed", "error");
     }
+}
+
+// Update leaderboard
+function updateLeaderboard() {
+    const leaderboardEntry = {
+        username: gameState.username,
+        crypto: gameState.crypto.toString(),
+        timestamp: Date.now()
+    };
+
+    if (isTelegram && window.Telegram.WebApp.CloudStorage) {
+        window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonLeaderboard', (error, value) => {
+            if (error) {
+                console.error('Error fetching leaderboard:', error);
+                return;
+            }
+
+            let leaderboard = value ? JSON.parse(value) : [];
+
+            // Update or add the current user's entry
+            const existingEntryIndex = leaderboard.findIndex(entry => entry.username === gameState.username);
+            if (existingEntryIndex !== -1) {
+                leaderboard[existingEntryIndex] = leaderboardEntry;
+            } else {
+                leaderboard.push(leaderboardEntry);
+            }
+
+            // Sort leaderboard by crypto amount
+            leaderboard.sort((a, b) => new Decimal(b.crypto).minus(new Decimal(a.crypto)).toNumber());
+
+            // Keep only top 100 entries to save storage space
+            leaderboard = leaderboard.slice(0, 100);
+
+            // Save updated leaderboard
+            window.Telegram.WebApp.CloudStorage.setItem('cryptoTycoonLeaderboard', JSON.stringify(leaderboard), (error) => {
+                if (error) {
+                    console.error('Error saving leaderboard:', error);
+                } else {
+                    console.log('Leaderboard updated successfully');
+                    globalLeaderboard = leaderboard;
+                    updateLeaderboardDisplay();
+                }
+            });
+        });
+    }
+}
+
+// Update leaderboard display
+function updateLeaderboardDisplay() {
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = '';
+
+    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
+        const li = document.createElement('div');
+        li.className = 'flex justify-between items-center';
+        li.innerHTML = `
+            <span>${index + 1}. ${entry.username}</span>
+            <span>${new Decimal(entry.crypto).toFixed(2)} BTC</span>
+        `;
+        leaderboardList.appendChild(li);
+    });
+
+    // Display user's rank
+    const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
+    const userRankElement = document.getElementById('userRank');
+    userRankElement.textContent = `Your Rank: #${userRank} (${gameState.crypto.toFixed(2)} BTC)`;
 }
 
 // Initialize game
@@ -366,6 +480,18 @@ function init() {
             window.Telegram.WebApp.onEvent('backButtonClicked', () => {
                 saveGame();
                 window.Telegram.WebApp.close();
+            });
+        }
+
+        // Fetch leaderboard on game start
+        if (window.Telegram.WebApp.CloudStorage) {
+            window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonLeaderboard', (error, value) => {
+                if (error) {
+                    console.error('Error fetching leaderboard:', error);
+                } else if (value) {
+                    globalLeaderboard = JSON.parse(value);
+                    updateLeaderboardDisplay();
+                }
             });
         }
     }
