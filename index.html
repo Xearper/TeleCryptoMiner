@@ -113,11 +113,23 @@
             filter: blur(8px);
             opacity: 0.7;
         }
+
+        .content-wrapper {
+            padding-bottom: env(safe-area-inset-bottom, 80px);
+        }
+
+        .bottom-spacer {
+            height: 80px;
+        }
+
+        .nav-bar {
+            height: 80px;
+        }
     </style>
 </head>
-<body class="flex flex-col h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
-    <main class="flex-grow flex flex-col items-center justify-center p-4 overflow-y-auto space-y-6">
-        <div class="w-full max-w-md space-y-6">
+<body class="flex flex-col min-h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
+    <main class="flex-grow flex flex-col items-center justify-start overflow-y-auto">
+        <div class="w-full max-w-md space-y-6 p-4 content-wrapper">
             <div class="bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
                 <div class="flex justify-between items-center mb-3">
                     <span class="font-semibold"><i class="fas fa-user mr-2 text-blue-400"></i><span id="usernameDisplay" class="glow-on-hover">Player</span></span>
@@ -165,11 +177,13 @@
                     <!-- User's rank will be displayed here -->
                 </div>
             </div>
+
+            <div class="bottom-spacer"></div>
         </div>
     </main>
 
-    <nav class="bg-gray-900 bg-opacity-80 shadow-lg backdrop-filter backdrop-blur-md fixed bottom-0 left-0 right-0 z-50">
-        <div class="flex justify-around max-w-md mx-auto">
+    <nav class="nav-bar bg-gray-900 bg-opacity-80 shadow-lg backdrop-filter backdrop-blur-md fixed bottom-0 left-0 right-0 z-50">
+        <div class="flex justify-around h-full max-w-md mx-auto">
             <button class="nav-btn flex flex-col items-center justify-center flex-1 py-2 px-1 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="mine">
                 <i class="fas fa-hammer text-xl mb-1"></i>
                 <span class="text-xs">Mine</span>
