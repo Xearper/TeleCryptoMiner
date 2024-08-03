@@ -389,10 +389,12 @@ async function updateLeaderboard() {
     try {
         const now = new Date();
         const formattedDate = now.toISOString().replace('T', ' ').replace('Z', '+00');
+        const cryptoNumeric = gameState.crypto.toNumber();
         
         console.log('Sending to Supabase:', {
             username: gameState.username, 
             crypto: gameState.crypto.toString(),
+            crypto_numeric: cryptoNumeric,
             last_updated: formattedDate
         });
 
@@ -401,6 +403,7 @@ async function updateLeaderboard() {
             .upsert({ 
                 username: gameState.username, 
                 crypto: gameState.crypto.toString(),
+                crypto_numeric: cryptoNumeric,
                 last_updated: formattedDate
             }, { 
                 onConflict: 'username' 
@@ -409,24 +412,24 @@ async function updateLeaderboard() {
         if (error) throw error;
         console.log('Leaderboard updated successfully');
     } catch (error) {
-        console.error('Error updating leaderboard:', error);
-        showNotification('Failed to update leaderboard', 'error');
+        console.error('Error updating leaderboard:', error.message, error.details);
+        showNotification(`Failed to update leaderboard: ${error.message}`, 'error');
     }
 }
-
 async function getLeaderboard() {
     try {
         const { data, error } = await supabase
             .from('leaderboard')
-            .select('username, crypto')
-            .order('crypto', { ascending: false })
+            .select('username, crypto, crypto_numeric')
+            .order('crypto_numeric', { ascending: false })
             .limit(10);
 
         if (error) throw error;
 
         return data.map(entry => ({
             ...entry,
-            crypto: new Decimal(entry.crypto)
+            crypto: new Decimal(entry.crypto || 0),
+            crypto_numeric: new Decimal(entry.crypto_numeric || entry.crypto || 0)
         }));
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
@@ -441,7 +444,7 @@ async function updateLeaderboardDisplay() {
     leaderboardList.innerHTML = '';
 
     leaderboard.forEach((entry, index) => {
-        const item = createLeaderboardItem(index + 1, entry.username, formatLargeNumber(entry.crypto));
+        const item = createLeaderboardItem(index + 1, entry.username, entry.crypto_numeric);
         leaderboardList.appendChild(item);
     });
 
@@ -482,7 +485,7 @@ function createLeaderboardItem(rank, username, btcAmount) {
             <span class="text-lg font-semibold mr-3 ${rank <= 3 ? 'text-yellow-400' : 'text-gray-400'}">#${rank}</span>
             <span class="text-white">${username}</span>
         </div>
-        <span class="text-btc-orange font-semibold">${btcAmount} BTC</span>
+        <span class="text-btc-orange font-semibold">${formatLargeNumber(btcAmount)} BTC</span>
     `;
     return item;
 }
