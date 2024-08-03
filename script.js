@@ -35,6 +35,39 @@ let gameState = {
     }
 };
 
+
+// Add this new function for coin animation
+function animateCoins(amount) {
+    const container = document.getElementById('bitcoinContainer');
+    const coinCount = Math.min(Math.ceil(amount), 10); // Limit to 10 coins max
+
+    for (let i = 0; i < coinCount; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'bitcoin-coin';
+        
+        // Random starting position
+        const startX = Math.random() * window.innerWidth;
+        const startY = window.innerHeight;
+        
+        coin.style.left = `${startX}px`;
+        coin.style.bottom = '0px';
+        
+        // Random animation duration between 1.5 and 2.5 seconds
+        const duration = 1.5 + Math.random();
+        
+        coin.style.animation = `floatUpCoin ${duration}s ease-out`;
+        
+        container.appendChild(coin);
+        
+        // Remove the coin element after animation completes
+        setTimeout(() => {
+            container.removeChild(coin);
+        }, duration * 1000);
+    }
+}
+
+
+
 // Check if running in Telegram environment
 const isTelegram = window.Telegram && window.Telegram.WebApp;
 
@@ -132,7 +165,7 @@ function formatPlayTime(seconds) {
     return `${hours}h ${minutes}m`;
 }
 
-// Handle crypto clicking
+// Modify the clickCrypto function to include coin animation
 function clickCrypto() {
     if (gameState.electricity.current.gte(1)) {
         const mined = gameState.clickPower;
@@ -142,6 +175,7 @@ function clickCrypto() {
         gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
         updateDisplay();
         animateClick(mined);
+        animateCoins(mined.toNumber()); // Add this line to trigger coin animation
 
         // Trigger vibration in Telegram environment
         if (isTelegram && window.Telegram.WebApp.hapticFeedback) {
