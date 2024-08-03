@@ -153,6 +153,195 @@
         #cryptoClicker:active {
             transform: scale(0.95);
         }
+
+        @keyframes upgradeAnimation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.animate-upgrade {
+    animation: upgradeAnimation 0.5s ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px theme('colors.btc-orange'), 0 0 10px theme('colors.btc-orange'); }
+    50% { box-shadow: 0 0 15px theme('colors.btc-orange'), 0 0 30px theme('colors.btc-orange'); }
+}
+
+#cryptoDisplay {
+    animation: pulse-glow 4s infinite;
+    transition: all 0.3s ease;
+}
+
+#cryptoDisplay:hover {
+    transform: translateY(-5px);
+}
+
+.bitcoin-icon-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+.bitcoin-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, theme('colors.btc-orange') 0%, transparent 70%);
+    opacity: 0.3;
+    filter: blur(8px);
+    animation: pulse-glow 2s infinite;
+}
+
+#cryptoAmount, #cryptoValue {
+    transition: all 0.3s ease;
+}
+
+#cryptoDisplay:hover #cryptoAmount {
+    transform: scale(1.05);
+}
+
+#cryptoDisplay:hover #cryptoValue {
+    opacity: 0.8;
+}
+
+.bg-gray-800 {
+    transition: all 0.3s ease;
+}
+
+.bg-gray-800:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(247, 147, 26, 0.5), 0 0 10px rgba(247, 147, 26, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(247, 147, 26, 0.5), 0 0 30px rgba(247, 147, 26, 0.3); }
+}
+
+#cryptoDisplay {
+    animation: pulse-glow 4s infinite;
+    transition: all 0.3s ease;
+}
+
+#cryptoDisplay:hover {
+    transform: translateY(-5px);
+}
+
+.bitcoin-icon-wrapper {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+.bitcoin-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(247, 147, 26, 0.2) 0%, transparent 70%);
+    filter: blur(8px);
+    animation: pulse-glow 2s infinite;
+}
+
+.bitcoin-gradient-text {
+    background: linear-gradient(45deg, #f7931a, #fbb03b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+
+#cryptoAmount, #cryptoValue, #miningRate, #totalMined {
+    transition: all 0.3s ease;
+}
+
+#cryptoDisplay:hover #cryptoAmount {
+    transform: scale(1.05);
+}
+
+#cryptoDisplay:hover #cryptoValue {
+    opacity: 0.8;
+}
+
+.bg-gray-100 {
+    transition: all 0.3s ease;
+}
+
+.bg-gray-100:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes value-change-animation {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.value-change {
+    animation: value-change-animation 0.3s ease;
+}
+
+.bitcoin-icon-wrapper {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: float 3s ease-in-out infinite;
+    background-color: rgba(247, 147, 26, 0.1); /* Light orange background */
+    border-radius: 50%; /* Make it circular */
+    padding: 10px; /* Add some padding */
+}
+
+@media (min-width: 640px) {
+    .bitcoin-icon-wrapper {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (min-width: 768px) {
+    .bitcoin-icon-wrapper {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+.bitcoin-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(247, 147, 26, 0.2) 0%, transparent 70%);
+    filter: blur(8px);
+    animation: pulse-glow 2s infinite;
+    border-radius: 50%; /* Make the glow effect circular */
+}
+
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200">
@@ -172,9 +361,58 @@
                 </div>
             </div>
 
-            <div id="cryptoDisplay" class="text-4xl font-bold card text-center animate-float">
-                <i class="fab fa-bitcoin mr-2 text-btc-orange"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
+            <!-- Updated cryptoDisplay section in the HTML -->
+<div id="cryptoDisplay" class="card bg-white text-center p-4 sm:p-6 md:p-8 relative overflow-hidden group transition-all duration-300 ease-in-out hover:shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl">
+    <div class="relative z-10">
+        <div class="flex flex-col items-center justify-center mb-4 sm:mb-6">
+            <div class="bitcoin-icon-wrapper mb-2 sm:mb-4 rounded-full">
+                <i class="fab fa-bitcoin text-4xl sm:text-5xl md:text-6xl bitcoin-gradient-text"></i>
             </div>
+            <div class="flex flex-col items-center sm:items-start">
+                <span id="cryptoAmount" class="text-3xl sm:text-4xl md:text-5xl font-bold bitcoin-gradient-text tracking-tight">0 BTC</span>
+                <span id="cryptoValue" class="text-sm sm:text-base md:text-lg text-gray-600 font-medium mt-1">≈ $0.00 USD</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6 md:mt-8">
+            <div class="bg-gray-100 rounded-lg p-3 sm:p-4 transition-all duration-300 hover:bg-gray-200">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Mining Rate</div>
+                <div class="flex items-center justify-center">
+                    <i class="fas fa-tachometer-alt mr-2 text-green-500"></i>
+                    <span id="miningRate" class="text-lg sm:text-xl font-semibold bitcoin-gradient-text">0 BTC/s</span>
+                </div>
+            </div>
+            <div class="bg-gray-100 rounded-lg p-3 sm:p-4 transition-all duration-300 hover:bg-gray-200">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Total Mined</div>
+                <div class="flex items-center justify-center">
+                    <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                    <span id="totalMined" class="text-lg sm:text-xl font-semibold bitcoin-gradient-text">0 BTC</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            
+            
+            <!-- Add this to your existing <style> section or in a separate CSS file -->
+            <style>
+            @keyframes pulse-glow {
+                0%, 100% { box-shadow: 0 0 5px theme('colors.btc-orange'), 0 0 10px theme('colors.btc-orange'); }
+                50% { box-shadow: 0 0 10px theme('colors.btc-orange'), 0 0 20px theme('colors.btc-orange'); }
+            }
+            
+            #cryptoDisplay {
+                animation: pulse-glow 3s infinite;
+            }
+            
+            .animate-bounce {
+                animation: bounce 1s infinite;
+            }
+            
+            @keyframes bounce {
+                0%, 100% { transform: translateY(-5%); }
+                50% { transform: translateY(5%); }
+            }
+            </style>
 
             <div id="mineSection" class="w-full flex justify-center items-center my-8">
                 <button id="cryptoClicker" class="w-64 h-64 bg-gradient-to-r from-btc-orange to-btc-orange-dark hover:from-btc-orange-dark hover:to-btc-orange text-white rounded-full text-3xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-btc-orange focus:ring-opacity-50 animate-btc-pulse flex flex-col items-center justify-center">
@@ -184,11 +422,9 @@
             </div>
 
             <div id="upgradeSection" class="w-full space-y-4 hidden">
-                <h2 class="text-2xl font-semibold mb-4 text-white text-center">Upgrades</h2>
-                <div id="upgradesList" class="space-y-4">
-                    <!-- Upgrade items will be dynamically added here by JavaScript -->
-                </div>
-            </div>
+                <h2 id="upgrades" class="text-2xl font-semibold mb-4 text-white text-center">Upgrades</h2>
+                <div id="upgradesList" class="space-y-4"></div>
+              </div>
 
             <div id="statsSection" class="w-full space-y-4 hidden">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Stats</h2>
