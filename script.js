@@ -35,39 +35,6 @@ let gameState = {
     }
 };
 
-
-// Add this new function for coin animation
-function animateCoins(amount) {
-    const container = document.getElementById('bitcoinContainer');
-    const coinCount = Math.min(Math.ceil(amount), 10); // Limit to 10 coins max
-
-    for (let i = 0; i < coinCount; i++) {
-        const coin = document.createElement('div');
-        coin.className = 'bitcoin-coin';
-        
-        // Random starting position
-        const startX = Math.random() * window.innerWidth;
-        const startY = window.innerHeight;
-        
-        coin.style.left = `${startX}px`;
-        coin.style.bottom = '0px';
-        
-        // Random animation duration between 1.5 and 2.5 seconds
-        const duration = 1.5 + Math.random();
-        
-        coin.style.animation = `floatUpCoin ${duration}s ease-out`;
-        
-        container.appendChild(coin);
-        
-        // Remove the coin element after animation completes
-        setTimeout(() => {
-            container.removeChild(coin);
-        }, duration * 1000);
-    }
-}
-
-
-
 // Check if running in Telegram environment
 const isTelegram = window.Telegram && window.Telegram.WebApp;
 
@@ -112,6 +79,8 @@ function updateDisplay() {
 // Update upgrades list
 function updateUpgradesList() {
     const upgradesList = document.getElementById('upgradesList');
+    if (!upgradesList) return; // Exit if element doesn't exist
+
     upgradesList.innerHTML = '';
     Object.entries(gameState.upgrades).forEach(([key, upgrade]) => {
         const li = document.createElement('div');
@@ -139,6 +108,8 @@ function updateUpgradesList() {
 // Update stats list
 function updateStatsList() {
     const statsList = document.getElementById('statsList');
+    if (!statsList) return; // Exit if element doesn't exist
+
     statsList.innerHTML = `
         <div class="flex justify-between items-center">
             <span>Total Clicks:</span>
@@ -165,7 +136,7 @@ function formatPlayTime(seconds) {
     return `${hours}h ${minutes}m`;
 }
 
-// Modify the clickCrypto function to include coin animation
+// Handle crypto clicking
 function clickCrypto() {
     if (gameState.electricity.current.gte(1)) {
         const mined = gameState.clickPower;
@@ -175,7 +146,7 @@ function clickCrypto() {
         gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
         updateDisplay();
         animateClick(mined);
-        animateCoins(mined.toNumber()); // Add this line to trigger coin animation
+        animateCoins(mined.toNumber());
 
         // Trigger vibration in Telegram environment
         if (isTelegram && window.Telegram.WebApp.hapticFeedback) {
@@ -194,6 +165,8 @@ function clickCrypto() {
 // Animate click
 function animateClick(amount) {
     const container = document.getElementById('clickAnimationContainer');
+    if (!container) return; // Exit if element doesn't exist
+
     const popup = document.createElement('div');
     popup.className = 'click-popup text-2xl text-yellow-400';
     popup.textContent = `+${formatLargeNumber(amount)} BTC`;
@@ -209,6 +182,38 @@ function animateClick(amount) {
     setTimeout(() => {
         container.removeChild(popup);
     }, 2000);
+}
+
+// Animate coins
+function animateCoins(amount) {
+    const container = document.getElementById('bitcoinContainer');
+    if (!container) return; // Exit if element doesn't exist
+
+    const coinCount = Math.min(Math.ceil(amount), 10); // Limit to 10 coins max
+
+    for (let i = 0; i < coinCount; i++) {
+        const coin = document.createElement('div');
+        coin.className = 'bitcoin-coin';
+        
+        // Random starting position
+        const startX = Math.random() * window.innerWidth;
+        const startY = window.innerHeight;
+        
+        coin.style.left = `${startX}px`;
+        coin.style.bottom = '0px';
+        
+        // Random animation duration between 1.5 and 2.5 seconds
+        const duration = 1.5 + Math.random();
+        
+        coin.style.animation = `floatUpCoin ${duration}s ease-out`;
+        
+        container.appendChild(coin);
+        
+        // Remove the coin element after animation completes
+        setTimeout(() => {
+            container.removeChild(coin);
+        }, duration * 1000);
+    }
 }
 
 // Regenerate electricity
@@ -302,7 +307,10 @@ function setupNavigation() {
         btn.addEventListener('click', () => {
             const targetSection = btn.dataset.section;
             sections.forEach(section => section.classList.add('hidden'));
-            document.getElementById(`${targetSection}Section`).classList.remove('hidden');
+            const targetElement = document.getElementById(`${targetSection}Section`);
+            if (targetElement) {
+                targetElement.classList.remove('hidden');
+            }
             navButtons.forEach(navBtn => navBtn.classList.remove('text-blue-500'));
             btn.classList.add('text-blue-500');
             
@@ -450,6 +458,7 @@ async function updateLeaderboard() {
         showNotification(`Failed to update leaderboard: ${error.message}`, 'error');
     }
 }
+
 async function getLeaderboard() {
     try {
         const { data, error } = await supabase
@@ -473,8 +482,10 @@ async function getLeaderboard() {
 }
 
 async function updateLeaderboardDisplay() {
-    const leaderboard = await getLeaderboard();
     const leaderboardList = document.getElementById('leaderboardList');
+    if (!leaderboardList) return; // Exit if element doesn't exist
+
+    const leaderboard = await getLeaderboard();
     leaderboardList.innerHTML = '';
 
     leaderboard.forEach((entry, index) => {
@@ -484,13 +495,15 @@ async function updateLeaderboardDisplay() {
 
     const userRank = await getUserRank();
     const userRankElement = document.getElementById('userRank');
-    userRankElement.innerHTML = `
-        <span class="text-lg font-semibold">Your Rank: 
-            <span class="text-btc-orange">#${userRank}</span>
-        </span>
-        <br>
-        <span class="text-sm">${formatLargeNumber(gameState.crypto)} BTC</span>
-    `;
+    if (userRankElement) {
+        userRankElement.innerHTML = `
+            <span class="text-lg font-semibold">Your Rank: 
+                <span class="text-btc-orange">#${userRank}</span>
+            </span>
+            <br>
+            <span class="text-sm">${formatLargeNumber(gameState.crypto)} BTC</span>
+        `;
+    }
 }
 
 async function getUserRank() {
@@ -537,8 +550,15 @@ async function init() {
     updateDisplay();
     setupNavigation();
     
-    document.getElementById('cryptoClicker').addEventListener('click', clickCrypto);
-    document.getElementById('refillElectricity').addEventListener('click', refillElectricity);
+    const cryptoClicker = document.getElementById('cryptoClicker');
+    if (cryptoClicker) {
+        cryptoClicker.addEventListener('click', clickCrypto);
+    }
+    
+    const refillElectricityBtn = document.getElementById('refillElectricity');
+    if (refillElectricityBtn) {
+        refillElectricityBtn.addEventListener('click', refillElectricity);
+    }
     
     setInterval(passiveIncome, 1000);
     setInterval(regenerateElectricity, 1000);
@@ -568,4 +588,12 @@ window.addEventListener('load', () => {
     (async () => {
         await init();
     })();
+});
+
+// Add click animation to the Mine BTC button
+document.getElementById('cryptoClicker').addEventListener('click', function(e) {
+    this.classList.add('animate-click-ripple');
+    setTimeout(() => {
+        this.classList.remove('animate-click-ripple');
+    }, 800); // Match this to the animation duration
 });
