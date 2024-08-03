@@ -38,16 +38,30 @@ function calculateHourlyIncome() {
         .times(3600).dividedBy(20).floor();
 }
 
+
+// New function to format large numbers
+function formatLargeNumber(num) {
+    const decimalNum = new Decimal(num);
+    if (decimalNum.gte(1e6)) {
+        return decimalNum.dividedBy(1e6).toFixed(2) + 'm';
+    } else if (decimalNum.gte(1e3)) {
+        return decimalNum.dividedBy(1e3).toFixed(2) + 'k';
+    } else {
+        return decimalNum.toFixed(2);
+    }
+}
+
+
 // Update game display
 function updateDisplay() {
     const cryptoAmount = gameState.crypto.isNaN() || !gameState.crypto.isFinite() 
         ? "Error" 
-        : gameState.crypto.floor().toString();
+        : formatLargeNumber(gameState.crypto);
     document.getElementById('cryptoAmount').textContent = `${cryptoAmount} BTC`;
     document.getElementById('usernameDisplay').textContent = gameState.username;
-    document.getElementById('hourlyIncomeDisplay').textContent = `${calculateHourlyIncome()} BTC/hr`;
-    document.getElementById('currentElectricity').textContent = gameState.electricity.current.floor().toString();
-    document.getElementById('maxElectricity').textContent = gameState.electricity.max.toString();
+    document.getElementById('hourlyIncomeDisplay').textContent = `${formatLargeNumber(calculateHourlyIncome())} BTC/hr`;
+    document.getElementById('currentElectricity').textContent = formatLargeNumber(gameState.electricity.current);
+    document.getElementById('maxElectricity').textContent = formatLargeNumber(gameState.electricity.max);
     
     const electricityPercentage = gameState.electricity.current.dividedBy(gameState.electricity.max).times(100).toNumber();
     document.getElementById('electricityProgress').style.width = `${electricityPercentage}%`;
@@ -69,7 +83,7 @@ function updateUpgradesList() {
                 <span class="text-yellow-400">Level ${upgrade.level}</span>
             </div>
             <div class="flex justify-between items-center">
-                <span class="text-green-400">${upgrade.cost.floor()} BTC</span>
+                <span class="text-green-400">${formatLargeNumber(upgrade.cost)} BTC</span>
                 <button class="upgrade-btn bg-btn-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" data-upgrade="${key}">Upgrade</button>
             </div>
         `;
@@ -83,20 +97,21 @@ function updateUpgradesList() {
     });
 }
 
+
 // Update stats list
 function updateStatsList() {
     const statsList = document.getElementById('statsList');
     statsList.innerHTML = `
         <div class="flex justify-between items-center">
             <span>Total Clicks:</span>
-            <span>${gameState.stats.totalClicks}</span>
+            <span>${formatLargeNumber(gameState.stats.totalClicks)}</span>
         </div>
         <div class="flex justify-between items-center">
-            <span>Total BTC Mined:</span><span>${gameState.stats.totalMined.floor()} BTC</span>
+            <span>Total BTC Mined:</span><span>${formatLargeNumber(gameState.stats.totalMined)} BTC</span>
         </div>
         <div class="flex justify-between items-center">
             <span>Upgrades Purchased:</span>
-            <span>${gameState.stats.upgradesPurchased}</span>
+            <span>${formatLargeNumber(gameState.stats.upgradesPurchased)}</span>
         </div>
         <div class="flex justify-between items-center">
             <span>Play Time:</span>
@@ -132,7 +147,7 @@ function animateClick(amount) {
     const container = document.getElementById('clickAnimationContainer');
     const popup = document.createElement('div');
     popup.className = 'click-popup text-2xl text-yellow-400';
-    popup.textContent = `+${amount} BTC`;
+    popup.textContent = `+${formatLargeNumber(amount)} BTC`;
     
     const x = Math.random() * (container.offsetWidth - 100);
     const y = Math.random() * (container.offsetHeight - 100);
@@ -394,13 +409,15 @@ function validateGameState() {
     }
 }
 
-// Update leaderboard
-function updateLeaderboard() {
-    const leaderboardEntry = {
-        username: gameState.username,
-        crypto: gameState.crypto.toString(),
-        timestamp: Date.now()
-    };
+// Update leaderboard display
+function updateLeaderboardDisplay() {
+    const leaderboardList = document.getElementById('leaderboardList');
+    leaderboardList.innerHTML = '';
+
+    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
+        const item = createLeaderboardItem(index + 1, entry.username, formatLargeNumber(new Decimal(entry.crypto)));
+        leaderboardList.appendChild(item);
+    });
 
     if (isTelegram && window.Telegram.WebApp.CloudStorage) {
         window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonLeaderboard', (error, value) => {
@@ -454,10 +471,16 @@ function updateLeaderboardDisplay() {
         leaderboardList.appendChild(li);
     });
 
-    // Display user's rank
-    const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
-    const userRankElement = document.getElementById('userRank');
-    userRankElement.textContent = `Your Rank: #${userRank} (${gameState.crypto.toFixed(2)} BTC)`;
+// Display user's rank
+const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
+const userRankElement = document.getElementById('userRank');
+userRankElement.innerHTML = `
+    <span class="text-lg font-semibold">Your Rank: 
+        <span class="text-btc-orange">#${userRank}</span>
+    </span>
+    <br>
+    <span class="text-sm">${formatLargeNumber(gameState.crypto)} BTC</span>
+`;
 }
 
 
