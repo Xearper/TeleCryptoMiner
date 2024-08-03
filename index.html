@@ -27,11 +27,16 @@
                     animation: {
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'btc-pulse': 'btcPulse 2s infinite',
+                        'float': 'float 3s ease-in-out infinite',
                     },
                     keyframes: {
                         btcPulse: {
                             '0%, 100%': { boxShadow: '0 0 0 0 rgba(247, 147, 26, 0.4)' },
                             '50%': { boxShadow: '0 0 0 15px rgba(247, 147, 26, 0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
                         }
                     }
                 },
@@ -39,8 +44,12 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
         .progress-bar {
             @apply bg-gray-700 rounded-full h-2 overflow-hidden;
         }
@@ -125,12 +134,20 @@
         .nav-bar {
             height: 80px;
         }
+
+        .card {
+            @apply bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm transition-all duration-300 ease-in-out;
+        }
+
+        .card:hover {
+            @apply transform -translate-y-1 shadow-xl;
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200 font-['Inter']">
+<body class="flex flex-col min-h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200">
     <main class="flex-grow flex flex-col items-center justify-start overflow-y-auto">
         <div class="w-full max-w-md space-y-6 p-4 content-wrapper">
-            <div class="bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+            <div class="card">
                 <div class="flex justify-between items-center mb-3">
                     <span class="font-semibold"><i class="fas fa-user mr-2 text-blue-400"></i><span id="usernameDisplay" class="glow-on-hover">Player</span></span>
                     <span class="text-green-400"><i class="fas fa-clock mr-2"></i><span id="hourlyIncomeDisplay">0 BTC/hr</span></span>
@@ -144,7 +161,7 @@
                 </div>
             </div>
 
-            <div id="cryptoDisplay" class="text-4xl font-bold bg-card-bg bg-opacity-80 rounded-xl p-8 text-center shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm glow-on-hover">
+            <div id="cryptoDisplay" class="text-4xl font-bold card text-center animate-float">
                 <i class="fab fa-bitcoin mr-2 text-btc-orange"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
             </div>
 
@@ -163,17 +180,17 @@
 
             <div id="statsSection" class="hidden w-full space-y-4">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Stats</h2>
-                <div id="statsList" class="space-y-4 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                <div id="statsList" class="space-y-4 card">
                     <!-- Stats will be dynamically added here by JavaScript -->
                 </div>
             </div>
 
             <div id="leaderboardSection" class="hidden w-full space-y-4">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Leaderboard</h2>
-                <div id="leaderboardList" class="space-y-2 bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                <div id="leaderboardList" class="space-y-2 card">
                     <!-- Leaderboard items will be dynamically added here by JavaScript -->
                 </div>
-                <div id="userRank" class="text-center mt-4 text-white bg-card-bg bg-opacity-80 rounded-xl p-3 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm">
+                <div id="userRank" class="text-center mt-4 text-white card">
                     <!-- User's rank will be displayed here -->
                 </div>
             </div>
