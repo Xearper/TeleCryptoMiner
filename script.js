@@ -14,10 +14,12 @@ let gameState = {
     crypto: new Decimal(0),
     clickPower: new Decimal(1),
     upgrades: {
-        gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5) },
-        asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8) },
-        quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2) },
-        solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2) }
+        gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5), icon: '💻' },
+        asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8), icon: '🖥️' },
+        quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2), icon: '🔬' },
+        solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2), icon: '☀️' },
+        ai: { level: 0, cost: new Decimal(10000), power: new Decimal(200), scaling: new Decimal(2.5), icon: '🤖' },
+        blockchain: { level: 0, cost: new Decimal(50000), power: new Decimal(500), scaling: new Decimal(3), icon: '🔗' },
     },
     lastUpdate: Date.now(),
     username: "Player",
@@ -58,12 +60,24 @@ function formatLargeNumber(num) {
     }
 }
 
-// Update game display
 function updateDisplay() {
     const cryptoAmount = gameState.crypto.isNaN() || !gameState.crypto.isFinite() 
         ? "Error" 
         : formatLargeNumber(gameState.crypto);
     document.getElementById('cryptoAmount').textContent = `${cryptoAmount} BTC`;
+    
+    // Update approximated USD value (assuming 1 BTC = $30,000 USD)
+    const usdValue = gameState.crypto.times(30000).toFixed(2);
+    document.getElementById('cryptoValue').textContent = `≈ $${formatLargeNumber(usdValue)} USD`;
+    
+    // Update mining rate
+    const miningRate = calculateMiningRate();
+    document.getElementById('miningRate').textContent = `${formatLargeNumber(miningRate)} BTC/s`;
+    
+    // Update total mined
+    document.getElementById('totalMined').textContent = `${formatLargeNumber(gameState.stats.totalMined)} BTC total`;
+
+    // Existing code for other elements
     document.getElementById('usernameDisplay').textContent = gameState.username;
     document.getElementById('hourlyIncomeDisplay').textContent = `${formatLargeNumber(calculateHourlyIncome())} BTC/hr`;
     document.getElementById('currentElectricity').textContent = formatLargeNumber(gameState.electricity.current);
@@ -76,19 +90,35 @@ function updateDisplay() {
     updateStatsList();
 }
 
-// Update upgrades list
+// Add this function to calculate the current mining rate
+function calculateMiningRate() {
+    let rate = new Decimal(0);
+    Object.values(gameState.upgrades).forEach(upgrade => {
+        rate = rate.plus(upgrade.power.times(upgrade.level));
+    });
+    return rate.dividedBy(20); // Assuming the same 20-second cycle as in passiveIncome
+}
+
+// Update upgrades list with improved UI
 function updateUpgradesList() {
     const upgradesList = document.getElementById('upgradesList');
-    if (!upgradesList) return; // Exit if element doesn't exist
+    if (!upgradesList) return;
 
     upgradesList.innerHTML = '';
     Object.entries(gameState.upgrades).forEach(([key, upgrade]) => {
         const li = document.createElement('div');
-        li.className = 'bg-card-bg bg-opacity-80 rounded-lg p-4 shadow-md border border-gray-700 backdrop-filter backdrop-blur-sm';
+        li.className = 'bg-card-bg bg-opacity-80 rounded-lg p-4 shadow-md border border-gray-700 backdrop-filter backdrop-blur-sm mb-4 transition-all duration-300 hover:shadow-lg';
         li.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <span class="font-semibold text-lg">${key.toUpperCase()}</span>
+                <span class="font-semibold text-lg flex items-center">
+                    <span class="mr-2 text-2xl">${upgrade.icon}</span>
+                    ${key.toUpperCase()}
+                </span>
                 <span class="text-yellow-400">Level ${upgrade.level}</span>
+            </div>
+            <div class="mb-2">
+                <div class="text-sm text-gray-300">Power: ${formatLargeNumber(upgrade.power.times(upgrade.level))} BTC/s</div>
+                <div class="text-sm text-gray-300">Next level: ${formatLargeNumber(upgrade.power.times(upgrade.level + 1))} BTC/s</div>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-green-400">${formatLargeNumber(upgrade.cost)} BTC</span>
@@ -236,7 +266,7 @@ function refillElectricity() {
     showNotification("Electricity refilled!", "success");
 }
 
-// Buy upgrade
+// Enhanced buy upgrade function
 function buyUpgrade(upgradeKey) {
     console.log(`Attempting to buy upgrade: ${upgradeKey}`);
     const upgrade = gameState.upgrades[upgradeKey];
@@ -255,21 +285,32 @@ function buyUpgrade(upgradeKey) {
         saveGame();
         console.log(`Successfully upgraded ${upgradeKey}. Showing success notification.`);
         showNotification(`Upgraded ${upgradeKey.toUpperCase()} to level ${upgrade.level}!`, 'success');
+        
+        // Add visual feedback
+        const upgradeElement = document.querySelector(`[data-upgrade="${upgradeKey}"]`).closest('.bg-card-bg');
+        upgradeElement.classList.add('animate-upgrade');
+        setTimeout(() => {
+            upgradeElement.classList.remove('animate-upgrade');
+        }, 500);
     } else {
         console.log(`Not enough BTC to upgrade ${upgradeKey}. Showing error notification.`);
         showNotification(`Not enough BTC to upgrade ${upgradeKey.toUpperCase()}!`, 'error');
     }
 }
 
-// Passive income
+
 function passiveIncome() {
     const now = Date.now();
     const timeDiff = new Decimal(now - gameState.lastUpdate).dividedBy(1000);
-    const passiveGain = timeDiff.times(
-        gameState.upgrades.gpu.level * gameState.upgrades.gpu.power
-        .plus(gameState.upgrades.asic.level * gameState.upgrades.asic.power)
-        .plus(gameState.upgrades.quantum.level * gameState.upgrades.quantum.power)
-    ).dividedBy(20);
+    let passiveGain = new Decimal(0);
+    
+    Object.values(gameState.upgrades).forEach(upgrade => {
+        if (upgrade.level > 0) {
+            passiveGain = passiveGain.plus(upgrade.power.times(upgrade.level));
+        }
+    });
+    
+    passiveGain = passiveGain.times(timeDiff).dividedBy(20);
     gameState.crypto = gameState.crypto.plus(passiveGain);
     gameState.stats.totalMined = gameState.stats.totalMined.plus(passiveGain);
     gameState.stats.playTime += timeDiff.toNumber();
@@ -366,16 +407,17 @@ function parseAndSetGameState(stateString) {
     updateDisplay();
 }
 
-// Reset game state to initial values
 function resetGameState() {
     gameState = {
         crypto: new Decimal(0),
         clickPower: new Decimal(1),
         upgrades: {
-            gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5) },
-            asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8) },
-            quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2) },
-            solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2) }
+            gpu: { level: 0, cost: new Decimal(50), power: new Decimal(1), scaling: new Decimal(1.5), icon: '💻' },
+            asic: { level: 0, cost: new Decimal(500), power: new Decimal(10), scaling: new Decimal(1.8), icon: '🖥️' },
+            quantum: { level: 0, cost: new Decimal(5000), power: new Decimal(100), scaling: new Decimal(2.2), icon: '🔬' },
+            solarPanel: { level: 0, cost: new Decimal(1000), power: new Decimal(5), scaling: new Decimal(2), icon: '☀️' },
+            ai: { level: 0, cost: new Decimal(10000), power: new Decimal(200), scaling: new Decimal(2.5), icon: '🤖' },
+            blockchain: { level: 0, cost: new Decimal(50000), power: new Decimal(500), scaling: new Decimal(3), icon: '🔗' },
         },
         lastUpdate: Date.now(),
         username: gameState.username || "Player",
@@ -582,6 +624,21 @@ async function init() {
     // Update leaderboard display using Supabase
     await updateLeaderboardDisplay();
 }
+
+// Start the game when the page loads
+window.addEventListener('load', () => {
+    (async () => {
+        await init();
+    })();
+});
+
+// Add click animation to the Mine BTC button
+document.getElementById('cryptoClicker').addEventListener('click', function(e) {
+    this.classList.add('animate-click-ripple');
+    setTimeout(() => {
+        this.classList.remove('animate-click-ripple');
+    }, 800); // Match this to the animation duration
+});
 
 // Start the game when the page loads
 window.addEventListener('load', () => {
