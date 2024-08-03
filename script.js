@@ -390,13 +390,14 @@ async function updateLeaderboard() {
         const now = new Date();
         const formattedDate = now.toISOString().replace('T', ' ').replace('Z', '+00');
         
+        console.log('Sending to Supabase:', {
+            username: gameState.username, 
+            crypto: gameState.crypto.toString(),
+            last_updated: formattedDate
+        });
+
         const { data, error } = await supabase
             .from('leaderboard')
-            console.log('Sending to Supabase:', {
-                username: gameState.username, 
-                crypto: gameState.crypto.toString(),
-                last_updated: formattedDate
-            })
             .upsert({ 
                 username: gameState.username, 
                 crypto: gameState.crypto.toString(),
