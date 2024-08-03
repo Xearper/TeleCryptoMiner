@@ -28,6 +28,7 @@
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'btc-pulse': 'btcPulse 2s infinite',
                         'float': 'float 3s ease-in-out infinite',
+                        'click-ripple': 'clickRipple 0.8s ease-out',
                     },
                     keyframes: {
                         btcPulse: {
@@ -37,6 +38,11 @@
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-10px)' },
+                        },
+                        clickRipple: {
+                            '0%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(247, 147, 26, 0.7)' },
+                            '70%': { transform: 'scale(1)', boxShadow: '0 0 0 10px rgba(247, 147, 26, 0)' },
+                            '100%': { transform: 'scale(0.95)', boxShadow: '0 0 0 0 rgba(247, 147, 26, 0)' },
                         }
                     }
                 },
@@ -63,20 +69,10 @@
         }
 
         @keyframes floatUp {
-            0% {
-                opacity: 0;
-                transform: translateY(0);
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-100px);
-            }
+            0% { opacity: 0; transform: translateY(0); }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-100px); }
         }
 
         .click-popup {
@@ -103,10 +99,7 @@
         #usernameDisplay::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
             border-radius: 0.5rem;
             z-index: -1;
@@ -127,13 +120,9 @@
             padding-bottom: env(safe-area-inset-bottom, 80px);
         }
 
-        .bottom-spacer {
-            height: 80px;
-        }
+        .bottom-spacer { height: 80px; }
 
-        .nav-bar {
-            height: 80px;
-        }
+        .nav-bar { height: 80px; }
 
         .card {
             @apply bg-card-bg bg-opacity-80 rounded-xl p-5 shadow-lg border border-gray-700 backdrop-filter backdrop-blur-sm transition-all duration-300 ease-in-out;
@@ -144,34 +133,8 @@
         }
 
         @keyframes floatUpCoin {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
-        .bitcoin-coin {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F7931A"><path d="M12 0L9.172 2H4v2h2v16H4v2h5.172L12 24l2.828-2H20v-2h-2V4h2V2h-5.172L12 0zm0 3.828L14.172 6h-4.344L12 3.828zM6 4h4.828L8 7.828V4zm5.172 2h1.656L15 8.172V6h3v2h-2v8h2v2h-3v-2.172L12.828 18h-1.656L9 15.828V18H6V6h3v2.172L11.172 6zM8 16.172l2.828-2.828L13.656 16H8v.172zM12 20.172L9.828 18h4.344L12 20.172z"/></svg>');
-            background-size: contain;
-            pointer-events: none;
-        }
-
-        @keyframes floatUpCoin {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-100vh) rotate(360deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
 
         .bitcoin-coin {
@@ -182,7 +145,14 @@
             background-size: contain;
             pointer-events: none;
         }
-    </style>
+
+        #cryptoClicker {
+            transition: all 0.3s ease;
+        }
+
+        #cryptoClicker:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-gradient-to-b from-dark-bg to-gray-900 text-gray-200">
@@ -206,27 +176,28 @@
                 <i class="fab fa-bitcoin mr-2 text-btc-orange"></i><span id="cryptoAmount" class="text-white">0 BTC</span>
             </div>
 
-            <div id="mineSection" class="w-full">
-                <button id="cryptoClicker" class="w-full py-6 bg-gradient-to-r from-btc-orange to-btc-orange-dark hover:from-btc-orange-dark hover:to-btc-orange text-white rounded-xl text-2xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:shadow-btc-glow focus:outline-none focus:ring-2 focus:ring-btc-orange focus:ring-opacity-50 animate-btc-pulse">
-                    <i class="fas fa-hammer mr-2"></i>Mine BTC
+            <div id="mineSection" class="w-full flex justify-center items-center my-8">
+                <button id="cryptoClicker" class="w-64 h-64 bg-gradient-to-r from-btc-orange to-btc-orange-dark hover:from-btc-orange-dark hover:to-btc-orange text-white rounded-full text-3xl font-bold shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-btc-orange focus:ring-opacity-50 animate-btc-pulse flex flex-col items-center justify-center">
+                    <i class="fas fa-hammer text-5xl mb-2"></i>
+                    Mine BTC
                 </button>
             </div>
 
-            <div id="upgradeSection" class="hidden w-full space-y-4">
+            <div id="upgradeSection" class="w-full space-y-4 hidden">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Upgrades</h2>
                 <div id="upgradesList" class="space-y-4">
                     <!-- Upgrade items will be dynamically added here by JavaScript -->
                 </div>
             </div>
 
-            <div id="statsSection" class="hidden w-full space-y-4">
+            <div id="statsSection" class="w-full space-y-4 hidden">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Stats</h2>
                 <div id="statsList" class="space-y-4 card">
                     <!-- Stats will be dynamically added here by JavaScript -->
                 </div>
             </div>
 
-            <div id="leaderboardSection" class="hidden w-full space-y-4">
+            <div id="leaderboardSection" class="w-full space-y-4 hidden">
                 <h2 class="text-2xl font-semibold mb-4 text-white text-center">Leaderboard</h2>
                 <div id="leaderboardList" class="space-y-2 card">
                     <!-- Leaderboard items will be dynamically added here by JavaScript -->
@@ -251,8 +222,7 @@
                 <span class="text-xs">Upgrade</span>
             </button>
             <button class="nav-btn flex flex-col items-center justify-center flex-1 py-2 px-1 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="stats">
-                <i class="fas fa-chart-bar text-xl mb-1"></i>
-                <span class="text-xs">Stats</span>
+                <i class="fas fa-chart-bar text-xl mb-1"></i><span class="text-xs">Stats</span>
             </button>
             <button class="nav-btn flex flex-col items-center justify-center flex-1 py-2 px-1 text-center focus:outline-none transition-colors duration-300 hover:bg-gray-800 hover:bg-opacity-50" data-section="leaderboard">
                 <i class="fas fa-trophy text-xl mb-1"></i>
