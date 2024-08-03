@@ -1,4 +1,15 @@
-// Game state
+// Import Supabase
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// Import Decimal.js from a CDN
+import Decimal from 'https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/decimal.mjs'
+
+// Initialize Supabase client
+const supabase = createClient(
+  'https://fjjpyuzazduwjossmihn.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqanB5dXphemR1d2pvc3NtaWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjI2NjE3NTcsImV4cCI6MjAzODIzNzc1N30.N0T1H053YxFkxg8SWghuuEbWU9CsJHJDAz1W1SZWAQ0'
+)
+
 let gameState = {
     crypto: new Decimal(0),
     clickPower: new Decimal(1),
@@ -24,9 +35,6 @@ let gameState = {
     }
 };
 
-// Global leaderboard variable
-let globalLeaderboard = [];
-
 // Check if running in Telegram environment
 const isTelegram = window.Telegram && window.Telegram.WebApp;
 
@@ -38,8 +46,7 @@ function calculateHourlyIncome() {
         .times(3600).dividedBy(20).floor();
 }
 
-
-// New function to format large numbers
+// Format large numbers
 function formatLargeNumber(num) {
     const decimalNum = new Decimal(num);
     if (decimalNum.gte(1e6)) {
@@ -50,7 +57,6 @@ function formatLargeNumber(num) {
         return decimalNum.toFixed(2);
     }
 }
-
 
 // Update game display
 function updateDisplay() {
@@ -97,7 +103,6 @@ function updateUpgradesList() {
     });
 }
 
-
 // Update stats list
 function updateStatsList() {
     const statsList = document.getElementById('statsList');
@@ -137,6 +142,16 @@ function clickCrypto() {
         gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
         updateDisplay();
         animateClick(mined);
+
+        // Trigger vibration in Telegram environment
+        if (isTelegram && window.Telegram.WebApp.hapticFeedback) {
+            try {
+                window.Telegram.WebApp.hapticFeedback.impactOccurred('light');
+                console.log('Vibration triggered');
+            } catch (error) {
+                console.error('Error triggering vibration:', error);
+            }
+        }
     } else {
         showNotification("Not enough electricity!", "error");
     }
@@ -264,58 +279,19 @@ function setupNavigation() {
     });
 }
 
-// Save game state
-function saveGame() {
+// Save game
+async function saveGame() {
     validateGameState();
     const gameStateString = JSON.stringify(gameState, (key, value) =>
         value instanceof Decimal ? value.toString() : value
     );
     localStorage.setItem('cryptoTycoonSave', gameStateString);
-
-    if (isTelegram && window.Telegram.WebApp.CloudStorage) {
-        try {
-            window.Telegram.WebApp.CloudStorage.setItem('cryptoTycoonSave', gameStateString, (error, success) => {
-                if (error) {
-                    console.log('Error saving game state to CloudStorage:', error);
-                } else {
-                    console.log('Game saved successfully to CloudStorage');
-                }
-            });
-        } catch (error) {
-            console.log('Error saving to CloudStorage, using only localStorage:', error);
-        }
-    }
-    
-    updateLeaderboard();
+    await updateLeaderboard();
 }
 
-// Load game state
+// Load game
 function loadGame() {
-    if (isTelegram && window.Telegram.WebApp.CloudStorage) {
-        try {
-            window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonSave', (error, value) => {
-                if (error) {
-                    console.log('Error loading game state from CloudStorage:', error);
-                    loadFromLocalStorage();
-                } else if (value) {
-                    try {
-                        parseAndSetGameState(value);
-                        console.log('Game loaded successfully from CloudStorage');
-                    } catch (parseError) {
-                        console.log('Error parsing game state from CloudStorage:', parseError);
-                        loadFromLocalStorage();
-                    }
-                } else {
-                    loadFromLocalStorage();
-                }
-            });
-        } catch (error) {
-            console.log('Error accessing CloudStorage, using only localStorage:', error);
-            loadFromLocalStorage();
-        }
-    } else {
-        loadFromLocalStorage();
-    }
+    loadFromLocalStorage();
 }
 
 // Load game from localStorage
@@ -378,7 +354,7 @@ function resetGameState() {
     showNotification('Starting new game', 'info');
 }
 
-// Validate game state (continued)
+// Validate game state
 function validateGameState() {
     const validationErrors = [];
     if (gameState.crypto.isNaN() || !gameState.crypto.isFinite()) {
@@ -409,102 +385,91 @@ function validateGameState() {
     }
 }
 
-// Update leaderboard display
-function updateLeaderboardDisplay() {
-    const leaderboardList = document.getElementById('leaderboardList');
-    leaderboardList.innerHTML = '';
-
-    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
-        const item = createLeaderboardItem(index + 1, entry.username, formatLargeNumber(new Decimal(entry.crypto)));
-        leaderboardList.appendChild(item);
-    });
-
-    if (isTelegram && window.Telegram.WebApp.CloudStorage) {
-        window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonLeaderboard', (error, value) => {
-            if (error) {
-                console.error('Error fetching leaderboard:', error);
-                return;
-            }
-
-            let leaderboard = value ? JSON.parse(value) : [];
-
-            // Update or add the current user's entry
-            const existingEntryIndex = leaderboard.findIndex(entry => entry.username === gameState.username);
-            if (existingEntryIndex !== -1) {
-                leaderboard[existingEntryIndex] = leaderboardEntry;
-            } else {
-                leaderboard.push(leaderboardEntry);
-            }
-
-            // Sort leaderboard by crypto amount
-            leaderboard.sort((a, b) => new Decimal(b.crypto).minus(new Decimal(a.crypto)).toNumber());
-
-            // Keep only top 100 entries to save storage space
-            leaderboard = leaderboard.slice(0, 100);
-
-            // Save updated leaderboard
-            window.Telegram.WebApp.CloudStorage.setItem('cryptoTycoonLeaderboard', JSON.stringify(leaderboard), (error) => {
-                if (error) {
-                    console.error('Error saving leaderboard:', error);
-                } else {
-                    console.log('Leaderboard updated successfully');
-                    globalLeaderboard = leaderboard;
-                    updateLeaderboardDisplay();
-                }
+async function updateLeaderboard() {
+    try {
+        const now = new Date();
+        const formattedDate = now.toISOString().replace('T', ' ').replace('Z', '+00');
+        
+        const { data, error } = await supabase
+            .from('leaderboard')
+            console.log('Sending to Supabase:', {
+                username: gameState.username, 
+                crypto: gameState.crypto.toString(),
+                last_updated: formattedDate
+            })
+            .upsert({ 
+                username: gameState.username, 
+                crypto: gameState.crypto.toString(),
+                last_updated: formattedDate
+            }, { 
+                onConflict: 'username' 
             });
-        });
+
+        if (error) throw error;
+        console.log('Leaderboard updated successfully');
+    } catch (error) {
+        console.error('Error updating leaderboard:', error);
+        showNotification('Failed to update leaderboard', 'error');
     }
 }
 
-// Update leaderboard display
-function updateLeaderboardDisplay() {
+async function getLeaderboard() {
+    try {
+        const { data, error } = await supabase
+            .from('leaderboard')
+            .select('username, crypto')
+            .order('crypto', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        return data.map(entry => ({
+            ...entry,
+            crypto: new Decimal(entry.crypto)
+        }));
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        showNotification('Failed to fetch leaderboard', 'error');
+        return [];
+    }
+}
+
+async function updateLeaderboardDisplay() {
+    const leaderboard = await getLeaderboard();
     const leaderboardList = document.getElementById('leaderboardList');
     leaderboardList.innerHTML = '';
 
-    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
-        const li = document.createElement('div');
-        li.className = 'flex justify-between items-center';
-        li.innerHTML = `
-            <span>${index + 1}. ${entry.username}</span>
-            <span>${new Decimal(entry.crypto).toFixed(2)} BTC</span>
-        `;
-        leaderboardList.appendChild(li);
+    leaderboard.forEach((entry, index) => {
+        const item = createLeaderboardItem(index + 1, entry.username, formatLargeNumber(entry.crypto));
+        leaderboardList.appendChild(item);
     });
 
-// Display user's rank
-const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
-const userRankElement = document.getElementById('userRank');
-userRankElement.innerHTML = `
-    <span class="text-lg font-semibold">Your Rank: 
-        <span class="text-btc-orange">#${userRank}</span>
-    </span>
-    <br>
-    <span class="text-sm">${formatLargeNumber(gameState.crypto)} BTC</span>
-`;
+    const userRank = await getUserRank();
+    const userRankElement = document.getElementById('userRank');
+    userRankElement.innerHTML = `
+        <span class="text-lg font-semibold">Your Rank: 
+            <span class="text-btc-orange">#${userRank}</span>
+        </span>
+        <br>
+        <span class="text-sm">${formatLargeNumber(gameState.crypto)} BTC</span>
+    `;
 }
 
+async function getUserRank() {
+    try {
+        const { data, error } = await supabase
+            .from('leaderboard')
+            .select('username')
+            .order('crypto', { ascending: false });
+        
+        if (error) throw error;
 
-function clickCrypto() {
-    if (gameState.electricity.current.gte(1)) {
-        const mined = gameState.clickPower;
-        gameState.crypto = gameState.crypto.plus(mined);
-        gameState.electricity.current = gameState.electricity.current.minus(1);
-        gameState.stats.totalClicks++;
-        gameState.stats.totalMined = gameState.stats.totalMined.plus(mined);
-        updateDisplay();
-        animateClick(mined);
-
-        // Trigger vibration in Telegram environment
-        if (isTelegram && window.Telegram.WebApp.hapticFeedback) {
-            try {
-                window.Telegram.WebApp.hapticFeedback.impactOccurred('light');
-                console.log('Vibration triggered');
-            } catch (error) {
-                console.error('Error triggering vibration:', error);
-            }
-        }
-    } else {
-        showNotification("Not enough electricity!", "error");
+        const rank = data.findIndex(entry => entry.username === gameState.username) + 1;
+        return rank || 'N/A';
+    } catch (error) {
+        console.error('Error fetching user rank:', error);
+        showNotification('Failed to fetch user rank', 'error');
+        return 'N/A';
     }
 }
 
@@ -521,31 +486,8 @@ function createLeaderboardItem(rank, username, btcAmount) {
     return item;
 }
 
-// Usage in updateLeaderboardDisplay function
-function updateLeaderboardDisplay() {
-    const leaderboardList = document.getElementById('leaderboardList');
-    leaderboardList.innerHTML = '';
-
-    globalLeaderboard.slice(0, 10).forEach((entry, index) => {
-        const item = createLeaderboardItem(index + 1, entry.username, new Decimal(entry.crypto).toFixed(2));
-        leaderboardList.appendChild(item);
-    });
-
-    // Display user's rank
-    const userRank = globalLeaderboard.findIndex(entry => entry.username === gameState.username) + 1;
-    const userRankElement = document.getElementById('userRank');
-    userRankElement.innerHTML = `
-        <span class="text-lg font-semibold">Your Rank: 
-            <span class="text-btc-orange">#${userRank}</span>
-        </span>
-        <br>
-        <span class="text-sm">${gameState.crypto.toFixed(2)} BTC</span>
-    `;
-}
-
-
 // Initialize game
-function init() {
+async function init() {
     if (isTelegram && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
         gameState.username = window.Telegram.WebApp.initDataUnsafe.user.username || 
                              `${window.Telegram.WebApp.initDataUnsafe.user.first_name} ${window.Telegram.WebApp.initDataUnsafe.user.last_name || ''}`.trim();
@@ -577,20 +519,15 @@ function init() {
                 window.Telegram.WebApp.close();
             });
         }
-
-        // Fetch leaderboard on game start
-        if (window.Telegram.WebApp.CloudStorage) {
-            window.Telegram.WebApp.CloudStorage.getItem('cryptoTycoonLeaderboard', (error, value) => {
-                if (error) {
-                    console.error('Error fetching leaderboard:', error);
-                } else if (value) {
-                    globalLeaderboard = JSON.parse(value);
-                    updateLeaderboardDisplay();
-                }
-            });
-        }
     }
+
+    // Update leaderboard display using Supabase
+    await updateLeaderboardDisplay();
 }
 
 // Start the game when the page loads
-window.addEventListener('load', init);
+window.addEventListener('load', () => {
+    (async () => {
+        await init();
+    })();
+});
